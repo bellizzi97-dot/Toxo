@@ -1,0 +1,83 @@
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+from pathlib import Path
+from typing import List
+
+from src.config import AssistantConfig
+from src.db import DatabaseManager
+from src.knowledge import KnowledgeStore
+
+
+class OfflineAssistant:
+    def __init__(self, config: AssistantConfig | None = None):
+        self.config = config or AssistantConfig.from_env()
+        self.db = DatabaseManager(self.config.database_path)
+        self.knowledge = KnowledgeStore(self.db)
+
+    def learn_from_user(self, topic: str, note: str) -> None:
+        self.db.add_memory(topic, note)
+
+    def remember(self, user_message: str, assistant_reply: str) -> None:
+        self.db.add_conversation(user_message, assistant_reply)
+
+    def _fallback_answer(self, question: str, knowledge: List[tuple], memory: List[str]) -> str:
+        best_match = ""
+        if knowledge:
+            best_match = knowledge[0][1][:500]
+
+        memory_context = "\n".join(memory[:3]) if memory else "No tengo recuerdos recientes sobre ese tema."
+
+        response = (
+            f"Estoy funcionando sin conexión. Basado en lo que tengo guardado, "
+            f"respondo con criterio y memoria local.\n\n"
+            f"Pregunta: {question}\n\n"
+            f"Contexto de conocimiento: {best_match[:300] if best_match else 'No encontré un documento local con información directa.'}\n\n"
+            f"Memoria: {memory_context}\n\n"
+            f"Si quieres, puedo profundizar, organizarlo mejor o convertir esta respuesta en una guía más precisa."
+        )
+        return response
+
+    def _ollama_available(self) -> bool:
+        return shutil.which("ollama") is not None
+
+    def _call_local_model(self, prompt: str) -> str | None:
+        if not self._ollama_available():
+            return None
+
+        try:
+            result = subprocess.run(
+                ["ollama", "run", "llama3.2", prompt],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()
+            return None
+        except Exception:
+            return None
+
+    def answer(self, question: str) -> str:
+        knowledge = self.knowledge.search(question, limit=3)
+        memory = self.db.search_memory(question, limit=5)
+
+        prompt = (
+            "Eres Toxo, un asistente inteligente y de personalidad cálida. "
+            "Responde en español de manera útil, clara y espontánea. "
+            "Usa solo la información disponible localmente.\n\n"
+            f"Pregunta: {question}\n\n"
+            f"Documentos locales:\n{json.dumps([{'title': t, 'body': b[:400], 'source': s} for t, b, s in knowledge], ensure_ascii=False)}\n\n"
+            f"Memoria local:\n{json.dumps(memory, ensure_ascii=False)}"
+        )
+
+        model_reply = self._call_local_model(prompt)
+        if model_reply:
+            self.remember(question, model_reply)
+            return model_reply
+
+        reply = self._fallback_answer(question, knowledge, memory)
+        self.remember(question, reply)
+        return reply
