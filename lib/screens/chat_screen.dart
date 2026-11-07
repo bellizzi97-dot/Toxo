@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../data/app_update_checker.dart';
 import '../data/local_conversation.dart';
 import '../data/knowledge_database.dart';
 import '../data/knowledge_package.dart';
@@ -13,11 +14,13 @@ class ChatScreen extends StatefulWidget {
   const ChatScreen({
     required this.database,
     required this.packManager,
+    this.appUpdateChecker,
     super.key,
   });
 
   final KnowledgeDatabase database;
   final OfflinePackManager packManager;
+  final AppUpdateChecker? appUpdateChecker;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -28,6 +31,9 @@ class _ChatScreenState extends State<ChatScreen> {
   final _scrollController = ScrollController();
   PackProgress? _packProgress;
   bool _packInstalled = false;
+  bool _hasInstalledPack = false;
+  bool _packUpdateAvailable = false;
+  int? _packDownloadBytes;
   bool _packBusy = false;
   DateTime? _lastProgressPaint;
   PackInstallStage? _lastPaintedStage;
@@ -37,7 +43,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final _messages = <_ChatMessage>[
     const _ChatMessage(
       text:
-          '¡Hola! Soy Toxo. Puedo buscar en mi biblioteca y, cuando descargues el pack, conversar con un modelo pequeño que funciona en tu teléfono.',
+          '¡Hola! Soy Toxo. Puedo buscar en mi biblioteca y conversar con un modelo local pequeño. A veces puedo equivocarme; si uso la biblioteca, te mostraré las fuentes.',
       isAssistant: true,
     ),
   ];
@@ -52,6 +58,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _generation?.cancel();
     widget.packManager.close();
+    widget.appUpdateChecker?.close();
     unawaited(_assistant?.dispose());
     _input.dispose();
     _scrollController.dispose();
@@ -59,8 +66,19 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _refreshPackStatus() async {
-    final installed = await widget.packManager.isInstalled;
-    if (mounted) setState(() => _packInstalled = installed);
+    final status = await Future.wait<Object>([
+      widget.packManager.isInstalled,
+      widget.packManager.hasInstalledPack,
+      widget.packManager.hasUpdate,
+      widget.packManager.bytesToDownload,
+    ]);
+    if (!mounted) return;
+    setState(() {
+      _packInstalled = status[0] as bool;
+      _hasInstalledPack = status[1] as bool;
+      _packUpdateAvailable = status[2] as bool;
+      _packDownloadBytes = status[3] as int;
+    });
   }
 
   Future<void> _send([String? suggestion]) async {
@@ -72,7 +90,8 @@ class _ChatScreenState extends State<ChatScreen> {
     final List<KnowledgeResult> results = socialReply == null
         ? widget.database.search(question)
         : const <KnowledgeResult>[];
-    final installed = socialReply == null && await widget.packManager.isInstalled;
+    final installed =
+        socialReply == null && await widget.packManager.hasInstalledPack;
     if (!mounted) return;
     setState(() {
       _messages.add(_ChatMessage(text: question, isAssistant: false));
@@ -206,13 +225,21 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _downloadPack() async {
     if (_packBusy) return;
+    final downloadBytes = await widget.packManager.bytesToDownload;
+    if (!mounted) return;
+    setState(() => _packDownloadBytes = downloadBytes);
+    final downloadDescription = downloadBytes < widget.packManager.manifest.totalBytes
+        ? 'Se descargará la biblioteca actualizada '
+        '(aprox. ${_formatBytes(downloadBytes)}). '
+              'El modelo ya está instalado y no se volverá a descargar.'
+        : 'Se descargarán el modelo y la biblioteca abierta '
+        '(aprox. ${_formatBytes(downloadBytes)}).';
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Descargar el pack offline'),
         content: Text(
-          'Se descargarán el modelo y la biblioteca abierta '
-          '(aprox. ${(widget.packManager.manifest.totalBytes / (1024 * 1024)).ceil()} MiB). '
+          '$downloadDescription '
           'Necesitas conexión y al menos 1 GB libre para la instalación y la memoria temporal. '
           'El contenido se guarda de forma privada en este dispositivo.',
         ),
@@ -261,7 +288,15 @@ class _ChatScreenState extends State<ChatScreen> {
       await _assistant?.dispose();
       _assistant = null;
       if (mounted && _packProgress?.stage != PackInstallStage.failed) {
-        setState(() => _packInstalled = true);
+        setState(() {
+          _packInstalled = true;
+          _hasInstalledPack = true;
+          _packUpdateAvailable = false;
+          _packProgress = null;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Pack offline listo en este dispositivo.')),
+        );
       }
     } on PackDownloadCancelled {
       // The manager already reports the cancellation in the progress panel.
@@ -380,7 +415,10 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () async {
               await Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => SettingsScreen(database: widget.database),
+                  builder: (_) => SettingsScreen(
+                    database: widget.database,
+                    appUpdateChecker: widget.appUpdateChecker,
+                  ),
                 ),
               );
               if (mounted) setState(() {});
@@ -396,39 +434,18 @@ class _ChatScreenState extends State<ChatScreen> {
             articleCount: count,
             onImport: _importPackage,
           ),
-          _PackStatus(
-            installed: _packInstalled,
-            busy: _packBusy,
-            progress: _packProgress,
-            packBytes: widget.packManager.manifest.totalBytes,
-            onDownload: _downloadPack,
-            onCancel: _cancelPackDownload,
-          ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFFFF1D6),
-              borderRadius: BorderRadius.circular(15),
+          if (!_packInstalled || _packUpdateAvailable || _packProgress != null)
+            _PackStatus(
+              installed: _packInstalled,
+              hasInstalledPack: _hasInstalledPack,
+              updateAvailable: _packUpdateAvailable,
+              busy: _packBusy,
+              progress: _packProgress,
+              packBytes:
+                  _packDownloadBytes ?? widget.packManager.manifest.totalBytes,
+              onDownload: _downloadPack,
+              onCancel: _cancelPackDownload,
             ),
-            child: const Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.lightbulb_rounded, color: Color(0xFFB36B00)),
-                SizedBox(width: 9),
-                Expanded(
-                  child: Text(
-                    'El pack se descarga una vez; después, el chat y la biblioteca funcionan localmente. El modelo puede equivocarse.',
-                    style: TextStyle(
-                      color: Color(0xFF654315),
-                      fontSize: 12,
-                      height: 1.35,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -569,6 +586,8 @@ class _LibraryStatus extends StatelessWidget {
 class _PackStatus extends StatelessWidget {
   const _PackStatus({
     required this.installed,
+    required this.hasInstalledPack,
+    required this.updateAvailable,
     required this.busy,
     required this.progress,
     required this.packBytes,
@@ -577,6 +596,8 @@ class _PackStatus extends StatelessWidget {
   });
 
   final bool installed;
+  final bool hasInstalledPack;
+  final bool updateAvailable;
   final bool busy;
   final PackProgress? progress;
   final int packBytes;
@@ -590,6 +611,7 @@ class _PackStatus extends StatelessWidget {
         current?.stage == PackInstallStage.downloadingModel;
     final ready = installed || current?.stage == PackInstallStage.ready;
     final failed = current?.stage == PackInstallStage.failed;
+    final isUpdate = hasInstalledPack && updateAvailable;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
@@ -609,36 +631,52 @@ class _PackStatus extends StatelessWidget {
           Row(
             children: [
               Icon(
-                ready ? Icons.verified_rounded : Icons.auto_awesome_rounded,
-                color: const Color(0xFF087F70),
+                isUpdate
+                    ? Icons.system_update_alt_rounded
+                    : ready
+                    ? Icons.verified_rounded
+                    : Icons.auto_awesome_rounded,
+                color: isUpdate
+                    ? const Color(0xFFB36B00)
+                    : const Color(0xFF087F70),
                 size: 20,
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  ready ? 'Pack offline listo' : 'Activa el chat con IA local',
+                  isUpdate
+                      ? 'Actualización del pack disponible'
+                      : ready
+                      ? 'Pack offline listo'
+                      : 'Activa el chat con IA local',
                   style: const TextStyle(
                     color: Color(0xFF075C55),
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-              if (!ready && !busy)
+              if ((!ready || updateAvailable) && !busy)
                 TextButton.icon(
                   onPressed: onDownload,
                   icon: Icon(
-                    failed ? Icons.refresh_rounded : Icons.download_rounded,
+                    failed
+                        ? Icons.refresh_rounded
+                        : isUpdate
+                        ? Icons.system_update_alt_rounded
+                        : Icons.download_rounded,
                     size: 18,
                   ),
                   label: Text(
                     failed
                         ? 'Reintentar'
-                        : 'Descargar · ${(packBytes / (1024 * 1024)).ceil()} MiB',
+                        : isUpdate
+                        ? 'Actualizar · ${_formatBytes(packBytes)}'
+                        : 'Descargar · ${_formatBytes(packBytes)}',
                   ),
                 ),
             ],
           ),
-          if (ready)
+          if (ready && !isUpdate)
             const Text(
               'Modelo y biblioteca en almacenamiento privado; el chat puede responder sin conexión.',
               style: TextStyle(fontSize: 12, color: Color(0xFF365D50)),
@@ -682,9 +720,14 @@ class _PackStatus extends StatelessWidget {
                   ),
               ],
             ),
-          ] else
+          ] else if (isUpdate)
+            const Text(
+              'Hay una versión nueva de la biblioteca o el modelo. Puedes seguir usando el pack actual sin conexión y actualizar cuando quieras.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF365D50)),
+            )
+          else
             Text(
-              'Una descarga de aprox. ${(packBytes / (1024 * 1024)).ceil()} MiB requiere internet. Después, no se necesita red.',
+              'Una descarga de ${_formatBytes(packBytes)} requiere internet. Después, no se necesita red.',
               style: const TextStyle(fontSize: 12, color: Color(0xFF365D50)),
             ),
         ],
@@ -703,24 +746,34 @@ class _ToxoMark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 42,
-      height: 42,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFD166),
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x33002118),
-            blurRadius: 8,
-            offset: Offset(0, 3),
-          ),
-        ],
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
+    return TweenAnimationBuilder<double>(
+      tween: Tween<double>(begin: reduceMotion ? 1 : 0.84, end: 1),
+      duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 520),
+      curve: Curves.elasticOut,
+      builder: (context, scale, child) => Transform.scale(
+        scale: scale,
+        child: child,
       ),
-      child: const Icon(
-        Icons.sentiment_satisfied_alt_rounded,
-        color: Color(0xFF075C55),
-        size: 25,
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFD166),
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33002118),
+              blurRadius: 8,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: const Icon(
+          Icons.sentiment_satisfied_alt_rounded,
+          color: Color(0xFF075C55),
+          size: 25,
+        ),
       ),
     );
   }
@@ -793,12 +846,24 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
+    final reduceMotion = MediaQuery.of(context).disableAnimations;
     return Align(
       alignment:
           message.isAssistant ? Alignment.centerLeft : Alignment.centerRight,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 680),
-        child: Padding(
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0, end: 1),
+        duration: reduceMotion ? Duration.zero : const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        builder: (context, progress, child) => Opacity(
+          opacity: progress,
+          child: Transform.translate(
+            offset: Offset(0, (1 - progress) * 10),
+            child: child,
+          ),
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 680),
+          child: Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -812,9 +877,14 @@ class _MessageBubble extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: message.isAssistant
-                        ? Colors.white
-                        : const Color(0xFFFFE6B8),
+                  color: message.isAssistant ? Colors.white : null,
+                  gradient: message.isAssistant
+                      ? null
+                      : const LinearGradient(
+                          colors: [Color(0xFFFFE39A), Color(0xFFFFC56D)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(19),
                       topRight: const Radius.circular(19),

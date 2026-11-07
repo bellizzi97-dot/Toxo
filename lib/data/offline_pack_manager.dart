@@ -75,19 +75,55 @@ class OfflinePackManager {
       File(p.join(_packDirectory.path, 'installed.json.previous'));
 
   Future<bool> get isInstalled async {
-    if (!await modelFile.exists() || !await _markerFile.exists()) return false;
-    try {
-      if (await modelFile.length() != manifest.model.sizeBytes) return false;
-      final marker = jsonDecode(await _markerFile.readAsString());
-      return marker is Map<String, dynamic> &&
-          marker['packId'] == manifest.packId &&
-          marker['version'] == manifest.version &&
-          marker['modelSha256'] == manifest.model.sha256 &&
-          marker['knowledgeSha256'] == manifest.knowledge.sha256;
-    } on FormatException {
+    final marker = await _readInstalledMarker();
+    return marker != null &&
+        await modelFile.length() == manifest.model.sizeBytes &&
+        marker['version'] == manifest.version &&
+        marker['modelSha256'] == manifest.model.sha256 &&
+        marker['knowledgeSha256'] == manifest.knowledge.sha256;
+  }
+
+  Future<bool> get hasInstalledPack async =>
+      await _readInstalledMarker() != null;
+
+  Future<bool> get hasUpdate async {
+    final marker = await _readInstalledMarker();
+    final installedVersion = marker?['version'];
+    return installedVersion is int && installedVersion < manifest.version;
+  }
+
+  Future<int> get bytesToDownload async =>
+      manifest.knowledge.sizeBytes +
+      (await _canReuseModel() ? 0 : manifest.model.sizeBytes);
+
+  Future<bool> _canReuseModel() async {
+    final marker = await _readInstalledMarker();
+    if (marker == null || marker['modelSha256'] != manifest.model.sha256) {
       return false;
+    }
+    try {
+      return await modelFile.length() == manifest.model.sizeBytes;
     } on FileSystemException {
       return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> _readInstalledMarker() async {
+    if (!await modelFile.exists() || !await _markerFile.exists()) return null;
+    try {
+      if (await modelFile.length() == 0) return null;
+      final marker = jsonDecode(await _markerFile.readAsString());
+      if (marker is! Map<String, dynamic> ||
+          marker['packId'] != manifest.packId ||
+          marker['modelSha256'] is! String ||
+          marker['knowledgeSha256'] is! String) {
+        return null;
+      }
+      return marker;
+    } on FormatException {
+      return null;
+    } on FileSystemException {
+      return null;
     }
   }
 
@@ -97,6 +133,8 @@ class OfflinePackManager {
     if (_active) throw StateError('Ya hay una descarga de pack en curso.');
     _active = true;
     _cancelRequested = false;
+    var reuseModel = false;
+    var totalDownloadBytes = manifest.totalBytes;
     var downloadedBeforeCurrent = 0;
     final knowledgePart =
         File(p.join(_packDirectory.path, '${manifest.knowledge.fileName}.part'));
@@ -121,7 +159,7 @@ class OfflinePackManager {
           stage: stage,
           message: message,
           downloadedBytes: downloadedBytes ?? downloadedBeforeCurrent + assetBytes,
-          totalBytes: manifest.totalBytes,
+          totalBytes: totalDownloadBytes,
           assetBytes: assetBytes,
           assetTotalBytes: assetTotalBytes,
         ),
@@ -129,6 +167,17 @@ class OfflinePackManager {
     }
 
     try {
+      reuseModel = await _canReuseModel();
+      if (reuseModel) {
+        try {
+          await _verifyAsset(manifest.model, modelFile);
+        } on FormatException {
+          reuseModel = false;
+        }
+      }
+      totalDownloadBytes =
+          manifest.knowledge.sizeBytes +
+          (reuseModel ? 0 : manifest.model.sizeBytes);
       await _packDirectory.create(recursive: true);
       if (await previousModel.exists()) {
         if (await modelFile.exists()) {
@@ -159,7 +208,7 @@ class OfflinePackManager {
         message: 'Descargando la biblioteca abierta…',
         alreadyDownloaded: 0,
         onProgress: onProgress,
-        totalBytes: manifest.totalBytes,
+        totalBytes: totalDownloadBytes,
       );
       report(
         PackInstallStage.verifyingKnowledge,
@@ -169,42 +218,52 @@ class OfflinePackManager {
       await _verifyAsset(manifest.knowledge, knowledgePart);
       downloadedBeforeCurrent = manifest.knowledge.sizeBytes;
 
-      report(
-        PackInstallStage.downloadingModel,
-        'Descargando el modelo local (aprox. 380 MiB)…',
-      );
-      await _downloadAsset(
-        manifest.model,
-        modelPart,
-        stage: PackInstallStage.downloadingModel,
-        message: 'Descargando el modelo local…',
-        alreadyDownloaded: downloadedBeforeCurrent,
-        onProgress: onProgress,
-        totalBytes: manifest.totalBytes,
-      );
-      report(
-        PackInstallStage.verifyingModel,
-        'Verificando el modelo descargado…',
-        assetBytes: manifest.model.sizeBytes,
-        assetTotalBytes: manifest.model.sizeBytes,
-        downloadedBytes: manifest.totalBytes,
-      );
-      await _verifyAsset(manifest.model, modelPart);
+      if (reuseModel) {
+        report(
+          PackInstallStage.verifyingModel,
+          'El modelo instalado pasó la comprobación SHA-256.',
+          downloadedBytes: totalDownloadBytes,
+        );
+      } else {
+        report(
+          PackInstallStage.downloadingModel,
+          'Descargando el modelo local (aprox. 380 MiB)…',
+        );
+        await _downloadAsset(
+          manifest.model,
+          modelPart,
+          stage: PackInstallStage.downloadingModel,
+          message: 'Descargando el modelo local…',
+          alreadyDownloaded: downloadedBeforeCurrent,
+          onProgress: onProgress,
+          totalBytes: totalDownloadBytes,
+        );
+        report(
+          PackInstallStage.verifyingModel,
+          'Verificando el modelo descargado…',
+          assetBytes: manifest.model.sizeBytes,
+          assetTotalBytes: manifest.model.sizeBytes,
+          downloadedBytes: totalDownloadBytes,
+        );
+        await _verifyAsset(manifest.model, modelPart);
+      }
 
       report(
         PackInstallStage.installing,
         'Instalando el modelo e indexando la biblioteca…',
-        assetBytes: manifest.model.sizeBytes,
-        assetTotalBytes: manifest.model.sizeBytes,
-        downloadedBytes: manifest.totalBytes,
+        assetBytes: reuseModel ? 0 : manifest.model.sizeBytes,
+        assetTotalBytes: reuseModel ? 0 : manifest.model.sizeBytes,
+        downloadedBytes: totalDownloadBytes,
       );
       final package = KnowledgePackage.decode(await knowledgePart.readAsString());
 
-      if (await modelFile.exists()) {
-        await modelFile.rename(previousModel.path);
+      if (!reuseModel) {
+        if (await modelFile.exists()) {
+          await modelFile.rename(previousModel.path);
+        }
+        await modelPart.rename(modelFile.path);
+        modelWasReplaced = true;
       }
-      await modelPart.rename(modelFile.path);
-      modelWasReplaced = true;
       database.importPackage(package);
       knowledgeImported = true;
 
@@ -228,9 +287,9 @@ class OfflinePackManager {
       report(
         PackInstallStage.ready,
         '¡Listo! El modelo y la biblioteca ya están instalados para usarse sin conexión.',
-        assetBytes: manifest.model.sizeBytes,
-        assetTotalBytes: manifest.model.sizeBytes,
-        downloadedBytes: manifest.totalBytes,
+        assetBytes: reuseModel ? 0 : manifest.model.sizeBytes,
+        assetTotalBytes: reuseModel ? 0 : manifest.model.sizeBytes,
+        downloadedBytes: totalDownloadBytes,
       );
     } on Object catch (error) {
       await _removeIfExists(knowledgePart);

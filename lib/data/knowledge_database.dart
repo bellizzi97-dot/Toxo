@@ -48,9 +48,25 @@ class KnowledgeDatabase {
         id TEXT PRIMARY KEY,
         package_id TEXT NOT NULL REFERENCES sources(package_id),
         title TEXT NOT NULL,
-        text TEXT NOT NULL
+        text TEXT NOT NULL,
+        source_url TEXT,
+        source_title TEXT,
+        license TEXT,
+        attribution TEXT
       )
     ''');
+    final articleColumns = _db
+        .select('PRAGMA table_info(articles)')
+        .map((row) => row['name'] as String)
+        .toSet();
+    if (!articleColumns.contains('source_url')) {
+      _db.execute('ALTER TABLE articles ADD COLUMN source_url TEXT');
+    }
+    for (final column in ['source_title', 'license', 'attribution']) {
+      if (!articleColumns.contains(column)) {
+        _db.execute('ALTER TABLE articles ADD COLUMN $column TEXT');
+      }
+    }
     _db.execute('''
       CREATE VIRTUAL TABLE IF NOT EXISTS articles_fts USING fts5(
         title, text, content='articles', content_rowid='rowid'
@@ -174,20 +190,41 @@ class KnowledgeDatabase {
       }
       for (final article in package.articles) {
         final existing = _db.select(
-          'SELECT package_id, title, text FROM articles WHERE id = ?',
+          'SELECT package_id, title, text, source_url, source_title, license, '
+          'attribution FROM articles WHERE id = ?',
           [article.id],
         );
+        final sameContentFromAnotherPackage =
+            existing.isNotEmpty &&
+            existing.first['package_id'] != package.packageId &&
+            existing.first['title'] == article.title &&
+            existing.first['text'] == article.text;
         if (existing.isNotEmpty &&
-            (existing.first['package_id'] != package.packageId ||
-                existing.first['title'] != article.title ||
-                existing.first['text'] != article.text)) {
+            !sameContentFromAnotherPackage &&
+            (existing.first['title'] != article.title ||
+                existing.first['text'] != article.text ||
+                existing.first['source_url'] != article.sourceUrl ||
+                existing.first['source_title'] != article.sourceTitle ||
+                existing.first['license'] != article.license ||
+                existing.first['attribution'] != article.attribution)) {
           throw FormatException(
             'El identificador de artículo "${article.id}" ya está en uso.',
           );
         }
         _db.execute(
-          'INSERT OR IGNORE INTO articles(id, package_id, title, text) VALUES (?, ?, ?, ?)',
-          [article.id, package.packageId, article.title, article.text],
+          'INSERT OR IGNORE INTO articles'
+          '(id, package_id, title, text, source_url, source_title, license, '
+          'attribution) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            article.id,
+            package.packageId,
+            article.title,
+            article.text,
+            article.sourceUrl,
+            article.sourceTitle,
+            article.license,
+            article.attribution,
+          ],
         );
       }
       _db.execute('COMMIT');
@@ -210,8 +247,10 @@ class KnowledgeDatabase {
         terms.map((term) => '"${term.replaceAll('"', '""')}"').join(' OR ');
     final rows = _db.select(
       '''
-      SELECT a.title, a.text, s.title AS source_title, s.license,
-             s.attribution, s.url AS source_url
+      SELECT a.title, a.text, COALESCE(a.source_title, s.title) AS source_title,
+             COALESCE(a.license, s.license) AS license,
+             COALESCE(a.attribution, s.attribution) AS attribution,
+             COALESCE(a.source_url, s.url) AS source_url
       FROM articles_fts
       JOIN articles a ON a.rowid = articles_fts.rowid
       JOIN sources s ON s.package_id = a.package_id

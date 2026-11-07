@@ -56,6 +56,45 @@ void main() {
     expect(await manager.isInstalled, isFalse);
     expect(manager.cancelled, isTrue);
   });
+
+  testWidgets('offers pack updates only when a newer version is available', (
+    tester,
+  ) async {
+    manager = _FakePackManager(
+      manifest: OfflinePackManifest.decode(jsonEncode(_manifestJson)),
+      database: database,
+      supportDirectory: supportDirectory,
+      hasInstalledPack: true,
+      updateAvailable: true,
+    );
+    await tester.pumpWidget(
+      MaterialApp(home: ChatScreen(database: database, packManager: manager)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Actualización del pack disponible'), findsOneWidget);
+    expect(find.textContaining('Actualizar ·'), findsOneWidget);
+    expect(find.textContaining('El pack se descarga una vez'), findsNothing);
+  });
+
+  testWidgets('hides the pack card after installation when no update exists', (
+    tester,
+  ) async {
+    manager = _FakePackManager(
+      manifest: OfflinePackManifest.decode(jsonEncode(_manifestJson)),
+      database: database,
+      supportDirectory: supportDirectory,
+      installed: true,
+      hasInstalledPack: true,
+    );
+    await tester.pumpWidget(
+      MaterialApp(home: ChatScreen(database: database, packManager: manager)),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Pack offline listo'), findsNothing);
+    expect(find.textContaining('Descargar ·'), findsNothing);
+  });
 }
 
 class _FakePackManager implements OfflinePackManager {
@@ -63,6 +102,9 @@ class _FakePackManager implements OfflinePackManager {
     required this.manifest,
     required this.database,
     required this.supportDirectory,
+    this.installed = false,
+    this.hasInstalledPack = false,
+    this.updateAvailable = false,
   });
 
   @override
@@ -71,6 +113,10 @@ class _FakePackManager implements OfflinePackManager {
   final KnowledgeDatabase database;
   @override
   final Directory supportDirectory;
+  final bool installed;
+  @override
+  final bool hasInstalledPack;
+  final bool updateAvailable;
 
   final _completion = Completer<void>();
   void Function(PackProgress progress)? _onProgress;
@@ -80,7 +126,13 @@ class _FakePackManager implements OfflinePackManager {
   File get modelFile => File('model-fixture.gguf');
 
   @override
-  Future<bool> get isInstalled async => false;
+  Future<bool> get isInstalled async => installed;
+
+  @override
+  Future<bool> get hasUpdate async => updateAvailable;
+
+  @override
+  Future<int> get bytesToDownload async => manifest.totalBytes;
 
   @override
   Future<void> downloadAndInstall({

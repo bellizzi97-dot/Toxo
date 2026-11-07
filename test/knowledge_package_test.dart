@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:toxo/data/knowledge_package.dart';
 
@@ -10,6 +12,37 @@ void main() {
       expect(package.license, 'CC BY-SA 4.0');
       expect(package.articles, hasLength(1));
       expect(package.articles.single.title, 'Artículo de prueba');
+    });
+
+    test('preserves article-specific license, attribution, and source URL', () {
+      final package = KnowledgePackage.decode(
+        _packageJson().replaceFirst(
+          '"text": "Texto abierto de prueba."',
+          '"text": "Texto abierto de prueba.",'
+          '"sourceTitle": "Wikipedia en español — Prueba",'
+          '"license": "CC BY-SA 4.0",'
+          '"attribution": "Contribuidores de Wikipedia",'
+          '"sourceUrl": "https://es.wikipedia.org/wiki/Prueba?oldid=123"',
+        ),
+      );
+
+      final article = package.articles.single;
+      expect(article.license, 'CC BY-SA 4.0');
+      expect(article.attribution, 'Contribuidores de Wikipedia');
+      expect(article.sourceUrl, contains('oldid=123'));
+    });
+
+    test('rejects insecure per-article source URLs', () {
+      expect(
+        () => KnowledgePackage.decode(
+          _packageJson().replaceFirst(
+            '"text": "Texto abierto de prueba."',
+            '"text": "Texto abierto de prueba.",'
+            '"sourceUrl": "http://es.wikipedia.org/wiki/Prueba"',
+          ),
+        ),
+        throwsFormatException,
+      );
     });
 
     test('rejects sources without HTTPS URLs', () {
@@ -46,6 +79,28 @@ void main() {
           ),
         ),
         throwsFormatException,
+      );
+    });
+
+    test('bundled library has 40 attributed entries from compatible licenses', () {
+      final package = KnowledgePackage.decode(
+        File('assets/packs/toxo-conocimientos-es-v2.json').readAsStringSync(),
+      );
+
+      expect(package.articles, hasLength(40));
+      expect(
+        package.articles.where((article) => article.license == 'CC BY-SA 4.0'),
+        hasLength(25),
+      );
+      expect(
+        package.articles.where((article) => article.license == 'CC0-1.0'),
+        hasLength(15),
+      );
+      expect(
+        package.articles
+            .where((article) => article.license == 'CC BY-SA 4.0')
+            .every((article) => article.sourceUrl!.contains('oldid=')),
+        isTrue,
       );
     });
   });

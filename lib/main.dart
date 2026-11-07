@@ -3,6 +3,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 
+import 'data/app_update_checker.dart';
 import 'data/demo_package.dart';
 import 'data/knowledge_database.dart';
 import 'data/offline_pack_manager.dart';
@@ -24,18 +25,27 @@ Future<void> main() async {
     database: database,
     supportDirectory: documentsDirectory,
   );
-  runApp(ToxoApp(database: database, packManager: packManager));
+  final appUpdateChecker = AppUpdateChecker();
+  runApp(
+    ToxoApp(
+      database: database,
+      packManager: packManager,
+      appUpdateChecker: appUpdateChecker,
+    ),
+  );
 }
 
 class ToxoApp extends StatelessWidget {
   const ToxoApp({
     required this.database,
     required this.packManager,
+    required this.appUpdateChecker,
     super.key,
   });
 
   final KnowledgeDatabase database;
   final OfflinePackManager packManager;
+  final AppUpdateChecker appUpdateChecker;
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +63,11 @@ class ToxoApp extends StatelessWidget {
           centerTitle: false,
         ),
       ),
-      home: ChatScreen(database: database, packManager: packManager),
+      home: ChatScreen(
+        database: database,
+        packManager: packManager,
+        appUpdateChecker: appUpdateChecker,
+      ),
     );
   }
 }

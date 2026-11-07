@@ -54,6 +54,86 @@ void main() {
     client.close();
   });
 
+  test('keeps an installed old pack usable while offering its newer version', () async {
+    final model = utf8.encode('small model fixture');
+    final knowledge = utf8.encode(_knowledgeJson);
+    final firstClient = _clientFor(model, knowledge);
+    final firstManager = OfflinePackManager(
+      manifest: _manifest(model, knowledge),
+      database: database,
+      supportDirectory: supportDirectory,
+      client: firstClient,
+    );
+    await firstManager.downloadAndInstall(onProgress: (_) {});
+
+    final updatedManager = OfflinePackManager(
+      manifest: _manifest(model, knowledge, version: 2),
+      database: database,
+      supportDirectory: supportDirectory,
+      client: MockClient((request) async {
+        expect(request.url.path, endsWith('library.json'));
+        return http.Response.bytes(knowledge, 200);
+      }),
+    );
+
+    expect(await updatedManager.isInstalled, isFalse);
+    expect(await updatedManager.hasInstalledPack, isTrue);
+    expect(await updatedManager.hasUpdate, isTrue);
+    expect(await updatedManager.bytesToDownload, knowledge.length);
+    expect(await updatedManager.modelFile.exists(), isTrue);
+    final updateProgress = <PackProgress>[];
+    await updatedManager.downloadAndInstall(onProgress: updateProgress.add);
+
+    expect(await updatedManager.isInstalled, isTrue);
+    expect(await updatedManager.hasUpdate, isFalse);
+    expect(
+      updateProgress.map((progress) => progress.stage),
+      isNot(contains(PackInstallStage.downloadingModel)),
+    );
+    expect(updateProgress.last.totalBytes, knowledge.length);
+    firstClient.close();
+    updatedManager.close();
+  });
+
+  test('redownloads a same-size model whose installed checksum is damaged', () async {
+    final model = utf8.encode('small model fixture');
+    final knowledge = utf8.encode(_knowledgeJson);
+    final firstClient = _clientFor(model, knowledge);
+    final firstManager = OfflinePackManager(
+      manifest: _manifest(model, knowledge),
+      database: database,
+      supportDirectory: supportDirectory,
+      client: firstClient,
+    );
+    await firstManager.downloadAndInstall(onProgress: (_) {});
+    await firstManager.modelFile.writeAsBytes(
+      [...model]..[0] = model[0] ^ 1,
+      flush: true,
+    );
+
+    final requests = <String>[];
+    final updateManager = OfflinePackManager(
+      manifest: _manifest(model, knowledge, version: 2),
+      database: database,
+      supportDirectory: supportDirectory,
+      client: MockClient((request) async {
+        requests.add(request.url.path);
+        final bytes = request.url.path.endsWith('library.json')
+            ? knowledge
+            : model;
+        return http.Response.bytes(bytes, 200);
+      }),
+    );
+
+    await updateManager.downloadAndInstall(onProgress: (_) {});
+
+    expect(requests, hasLength(2));
+    expect(await updateManager.modelFile.readAsBytes(), model);
+    expect(await updateManager.isInstalled, isTrue);
+    firstClient.close();
+    updateManager.close();
+  });
+
   test('rejects a pack when a downloaded asset fails SHA-256 verification', () async {
     final model = utf8.encode('altered model fixture');
     final knowledge = utf8.encode(_knowledgeJson);
@@ -227,6 +307,7 @@ OfflinePackManifest _manifest(
   List<int> model,
   List<int> knowledge, {
   String? modelSha256,
+  int version = 1,
 }) {
   return OfflinePackManifest.decode(
     jsonEncode(
@@ -234,6 +315,7 @@ OfflinePackManifest _manifest(
         modelBytes: model,
         knowledgeBytes: knowledge,
         modelSha256: modelSha256,
+        version: version,
       ),
     ),
   );
@@ -244,11 +326,12 @@ Map<String, Object?> _manifestJson({
   required List<int> knowledgeBytes,
   String? modelSha256,
   String? modelUrl,
+  int version = 1,
 }) {
   return {
     'schemaVersion': 1,
     'packId': 'toxo-pack-test',
-    'version': 1,
+    'version': version,
     'title': 'Pack de prueba',
     'model': {
       'id': 'test-model',

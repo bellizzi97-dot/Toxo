@@ -16,10 +16,12 @@ dependencies:
     git:
       url: https://github.com/netdur/llama_cpp_dart.git
       ref: 04743fdd3755973b7c80741e6180daa4b704e587
+  package_info_plus: ^9.0.0
   path: ^1.9.1
   path_provider: ^2.1.5
   sqlite3: ^2.7.5
   sqlite3_flutter_libs: ^0.5.32
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

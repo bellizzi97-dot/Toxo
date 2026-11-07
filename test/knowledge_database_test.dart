@@ -27,6 +27,109 @@ void main() {
     expect(results.single.text, contains('magma'));
   });
 
+  test('uses article-level attribution for multi-source packages', () {
+    final package = KnowledgePackage(
+      packageId: 'mixed-sources',
+      sourceTitle: 'Biblioteca abierta',
+      license: 'CC0-1.0 y CC BY-SA 4.0',
+      attribution: 'Cada artículo identifica su fuente.',
+      sourceUrl: 'https://example.org/library',
+      articles: const [
+        KnowledgeArticle(
+          id: 'wikipedia-gravity',
+          title: 'Gravedad',
+          text: 'La gravedad es una interacción entre cuerpos con masa.',
+          sourceTitle: 'Wikipedia en español — Gravedad',
+          license: 'CC BY-SA 4.0',
+          attribution: 'Wikipedia contributors',
+          sourceUrl: 'https://es.wikipedia.org/wiki/Gravedad?oldid=123',
+        ),
+      ],
+    );
+    database.importPackage(package);
+
+    final result = database.search('interacción entre cuerpos').single;
+
+    expect(result.sourceTitle, 'Wikipedia en español — Gravedad');
+    expect(result.license, 'CC BY-SA 4.0');
+    expect(result.attribution, 'Wikipedia contributors');
+    expect(result.sourceUrl, contains('oldid=123'));
+  });
+
+  test('preserves existing attribution when identical article IDs are reused', () {
+    database.importPackage(_package());
+    database.importPackage(
+      KnowledgePackage(
+        packageId: 'updated-library',
+        sourceTitle: 'Fuentes abiertas mixtas',
+        license: 'CC0-1.0 y CC BY-SA 4.0',
+        attribution: 'Licencia específica por artículo.',
+        sourceUrl: 'https://example.org/updated',
+        articles: const [
+          KnowledgeArticle(
+            id: 'volcanes',
+            title: 'Volcanes',
+            text: 'El magma puede salir a la superficie durante una erupción.',
+            sourceTitle: 'Otra copia',
+            license: 'CC BY-SA 4.0',
+            attribution: 'Otra atribución',
+            sourceUrl: 'https://example.org/volcanes',
+          ),
+        ],
+      ),
+    );
+
+    final result = database.search('magma').single;
+    expect(database.articleCount, 1);
+    expect(result.sourceTitle, 'Enciclopedia de prueba');
+    expect(result.license, 'CC0-1.0');
+  });
+
+  test('migrates existing article tables before importing source metadata', () {
+    database.close();
+    final oldDatabase = sqlite3.open(':memory:');
+    oldDatabase.execute('''
+      CREATE TABLE sources (
+        package_id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        license TEXT NOT NULL,
+        attribution TEXT NOT NULL,
+        url TEXT NOT NULL
+      )
+    ''');
+    oldDatabase.execute('''
+      CREATE TABLE articles (
+        id TEXT PRIMARY KEY,
+        package_id TEXT NOT NULL REFERENCES sources(package_id),
+        title TEXT NOT NULL,
+        text TEXT NOT NULL
+      )
+    ''');
+    database = KnowledgeDatabase(oldDatabase)..initialize();
+    database.importPackage(
+      KnowledgePackage(
+        packageId: 'new-license',
+        sourceTitle: 'Biblioteca',
+        license: 'CC BY-SA 4.0',
+        attribution: 'Fuente global',
+        sourceUrl: 'https://example.org/library',
+        articles: const [
+          KnowledgeArticle(
+            id: 'attributed',
+            title: 'Célula',
+            text: 'La célula es la unidad básica de los seres vivos.',
+            sourceTitle: 'Wikipedia en español — Célula',
+            license: 'CC BY-SA 4.0',
+            attribution: 'Wikipedia contributors',
+            sourceUrl: 'https://es.wikipedia.org/wiki/C%C3%A9lula?oldid=42',
+          ),
+        ],
+      ),
+    );
+
+    expect(database.search('unidad básica').single.sourceUrl, contains('oldid=42'));
+  });
+
   test('rejects a conflicting package atomically', () {
     database.importPackage(_package());
 
