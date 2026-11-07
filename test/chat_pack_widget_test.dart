@@ -19,19 +19,19 @@ void main() {
   late KnowledgeDatabase database;
   late OfflinePackManager manager;
   late MockClient client;
-  late Completer<void> modelResponse;
+  late Completer<void> knowledgeResponse;
 
   setUp(() async {
     supportDirectory = await Directory.systemTemp.createTemp('toxo-chat-test-');
     database = KnowledgeDatabase(sqlite3.open(':memory:'))..initialize();
     final model = utf8.encode('model fixture');
     final knowledge = utf8.encode(_knowledgeJson);
-    modelResponse = Completer<void>();
+    knowledgeResponse = Completer<void>();
     client = MockClient((request) async {
       if (request.url.path.endsWith('library.json')) {
+        await knowledgeResponse.future;
         return http.Response.bytes(knowledge, 200);
       }
-      await modelResponse.future;
       return http.Response.bytes(model, 200);
     });
     manager = OfflinePackManager(
@@ -45,6 +45,7 @@ void main() {
   });
 
   tearDown(() async {
+    if (!knowledgeResponse.isCompleted) knowledgeResponse.complete();
     manager.close();
     client.close();
     database.close();
@@ -66,10 +67,10 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('Descargando el modelo local…'), findsOneWidget);
+    expect(find.text('Descargando la biblioteca abierta…'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
     await tester.tap(find.text('Cancelar'));
-    modelResponse.complete();
+    knowledgeResponse.complete();
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
     await tester.pumpAndSettle();
