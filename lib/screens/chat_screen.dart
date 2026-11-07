@@ -37,7 +37,9 @@ class _ChatScreenState extends State<ChatScreen> {
     if (question.isEmpty) return;
     final style = widget.database.style;
     final socialReply = LocalConversation.replyTo(question);
-    final results = socialReply == null ? widget.database.search(question) : [];
+    final List<KnowledgeResult> results = socialReply == null
+        ? widget.database.search(question)
+        : const <KnowledgeResult>[];
     setState(() {
       _messages.add(_ChatMessage(text: question, isAssistant: false));
       if (socialReply != null) {
