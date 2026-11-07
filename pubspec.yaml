@@ -4,11 +4,18 @@ publish_to: none
 version: 0.1.0+1
 
 environment:
-  sdk: ">=3.3.0 <4.0.0"
+  sdk: ">=3.10.0 <4.0.0"
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
     sdk: flutter
+  crypto: ^3.0.6
+  http: ^1.4.0
+  llama_cpp_dart:
+    git:
+      url: https://github.com/netdur/llama_cpp_dart.git
+      ref: 04743fdd3755973b7c80741e6180daa4b704e587
   path: ^1.9.1
   path_provider: ^2.1.5
   sqlite3: ^2.7.5
@@ -20,3 +27,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/packs/android_starter_manifest.json

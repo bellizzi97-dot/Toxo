@@ -1,14 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../data/local_conversation.dart';
 import '../data/knowledge_database.dart';
 import '../data/knowledge_package.dart';
+import '../data/local_model_assistant.dart';
+import '../data/offline_pack_manager.dart';
 import 'settings_screen.dart';
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({required this.database, super.key});
+  const ChatScreen({
+    required this.database,
+    required this.packManager,
+    super.key,
+  });
 
   final KnowledgeDatabase database;
+  final OfflinePackManager packManager;
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -17,22 +26,45 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _input = TextEditingController();
   final _scrollController = ScrollController();
+  PackProgress? _packProgress;
+  bool _packInstalled = false;
+  bool _packBusy = false;
+  DateTime? _lastProgressPaint;
+  PackInstallStage? _lastPaintedStage;
+  LocalModelAssistant? _assistant;
+  StreamSubscription<String>? _generation;
+  Completer<void>? _generationCompletion;
   final _messages = <_ChatMessage>[
     const _ChatMessage(
       text:
-          '¡Hola! Soy Toxo. En este prototipo puedo buscar en los paquetes de conocimiento que importes. Mis respuestas son locales y muestran sus fuentes.',
+          '¡Hola! Soy Toxo. Puedo buscar en mi biblioteca y, cuando descargues el pack, conversar con un modelo pequeño que funciona en tu teléfono.',
       isAssistant: true,
     ),
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _refreshPackStatus();
+  }
+
+  @override
   void dispose() {
+    _generation?.cancel();
+    widget.packManager.close();
+    unawaited(_assistant?.dispose());
     _input.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
-  void _send([String? suggestion]) {
+  Future<void> _refreshPackStatus() async {
+    final installed = await widget.packManager.isInstalled;
+    if (mounted) setState(() => _packInstalled = installed);
+  }
+
+  Future<void> _send([String? suggestion]) async {
+    if (_generation != null) return;
     final question = (suggestion ?? _input.text).trim();
     if (question.isEmpty) return;
     final style = widget.database.style;
@@ -40,17 +72,27 @@ class _ChatScreenState extends State<ChatScreen> {
     final List<KnowledgeResult> results = socialReply == null
         ? widget.database.search(question)
         : const <KnowledgeResult>[];
+    final installed = socialReply == null && await widget.packManager.isInstalled;
+    if (!mounted) return;
     setState(() {
       _messages.add(_ChatMessage(text: question, isAssistant: false));
       if (socialReply != null) {
         _messages.add(
           _ChatMessage(text: socialReply, isAssistant: true),
         );
+      } else if (installed) {
+        _messages.add(
+          _ChatMessage(
+            text: 'Preparando el modelo local…',
+            isAssistant: true,
+            citations: results,
+          ),
+        );
       } else if (results.isEmpty) {
         _messages.add(
           const _ChatMessage(
             text:
-                'Todavía no encuentro eso en tu biblioteca local. Importa un paquete de conocimiento abierto para que pueda buscarlo. No voy a inventar una respuesta.',
+                'Todavía no encuentro eso en tu biblioteca local. Descarga el pack para habilitar respuestas generadas por el modelo local; no voy a inventar una respuesta.',
             isAssistant: true,
           ),
         );
@@ -68,6 +110,89 @@ class _ChatScreenState extends State<ChatScreen> {
       }
       _input.clear();
     });
+    if (installed) {
+      final messageIndex = _messages.length - 1;
+      final completer = Completer<void>();
+      _generationCompletion = completer;
+      _assistant ??= LocalModelAssistant(
+        modelPath: widget.packManager.modelFile.path,
+        database: widget.database,
+      );
+      _generation = _assistant!
+          .generate(question: question, sources: results)
+          .listen(
+            (token) {
+              if (!mounted) return;
+              final current = _messages[messageIndex];
+              setState(() {
+                _messages[messageIndex] = _ChatMessage(
+                  text: current.text == 'Preparando el modelo local…'
+                      ? token
+                      : current.text + token,
+                  isAssistant: true,
+                  citations: results,
+                );
+              });
+              _scrollToBottom();
+            },
+            onError: (Object error, StackTrace stackTrace) {
+              if (mounted) {
+                final current = _messages[messageIndex];
+                setState(() {
+                  _messages[messageIndex] = _ChatMessage(
+                    text: current.text == 'Preparando el modelo local…'
+                        ? 'No pude iniciar el modelo local: $error'
+                        : '${current.text}\n\nLa generación se detuvo: $error',
+                    isAssistant: true,
+                    citations: results,
+                  );
+                });
+              }
+              _finishGeneration(completer);
+            },
+            onDone: () {
+              if (mounted) {
+                final current = _messages[messageIndex];
+                if (current.text == 'Preparando el modelo local…') {
+                  setState(() {
+                    _messages[messageIndex] = _ChatMessage(
+                      text: 'El modelo no generó texto. Inténtalo de nuevo.',
+                      isAssistant: true,
+                      citations: results,
+                    );
+                  });
+                }
+              }
+              _finishGeneration(completer);
+            },
+            cancelOnError: true,
+          );
+      await completer.future;
+    }
+    _scrollToBottom();
+  }
+
+  void _finishGeneration(Completer<void> completer) {
+    if (identical(_generationCompletion, completer)) {
+      _generation = null;
+      _generationCompletion = null;
+    }
+    if (mounted) setState(() {});
+    if (!completer.isCompleted) completer.complete();
+  }
+
+  Future<void> _cancelGeneration() async {
+    final generation = _generation;
+    if (generation == null) return;
+    _generation = null;
+    final completion = _generationCompletion;
+    _generationCompletion = null;
+    await generation.cancel();
+    if (completion != null && !completion.isCompleted) completion.complete();
+    if (mounted) setState(() {});
+  }
+
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
         _scrollController.animateTo(
@@ -77,6 +202,78 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     });
+  }
+
+  Future<void> _downloadPack() async {
+    if (_packBusy) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Descargar el pack offline'),
+        content: Text(
+          'Se descargarán el modelo y la biblioteca abierta '
+          '(aprox. ${(widget.packManager.manifest.totalBytes / (1024 * 1024)).ceil()} MiB). '
+          'Necesitas conexión y al menos 1 GB libre para la instalación y la memoria temporal. '
+          'El contenido se guarda de forma privada en este dispositivo.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Ahora no'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Descargar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() {
+      _packBusy = true;
+      _packProgress = PackProgress(
+        stage: PackInstallStage.downloadingKnowledge,
+        message: 'Preparando la descarga…',
+        downloadedBytes: 0,
+        totalBytes: widget.packManager.manifest.totalBytes,
+      );
+    });
+    try {
+      await widget.packManager.downloadAndInstall(
+        onProgress: (progress) {
+          if (!mounted) return;
+          final now = DateTime.now();
+          final stageChanged = progress.stage != _lastPaintedStage;
+          final finished =
+              progress.stage == PackInstallStage.ready ||
+              progress.stage == PackInstallStage.failed;
+          if (stageChanged ||
+              finished ||
+              _lastProgressPaint == null ||
+              now.difference(_lastProgressPaint!) >=
+                  const Duration(milliseconds: 150)) {
+            _lastPaintedStage = progress.stage;
+            _lastProgressPaint = now;
+            setState(() => _packProgress = progress);
+          }
+        },
+      );
+      await _assistant?.dispose();
+      _assistant = null;
+      if (mounted && _packProgress?.stage != PackInstallStage.failed) {
+        setState(() => _packInstalled = true);
+      }
+    } on PackDownloadCancelled {
+      // The manager already reports the cancellation in the progress panel.
+    } on Object catch (error) {
+      _showError('No se pudo completar la descarga: $error');
+    } finally {
+      if (mounted) setState(() => _packBusy = false);
+    }
+  }
+
+  void _cancelPackDownload() {
+    widget.packManager.cancelDownload();
   }
 
   Future<void> _importPackage() async {
@@ -195,15 +392,17 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
       body: Column(
         children: [
-          AnimatedSwitcher(
-            duration: const Duration(milliseconds: 260),
-            switchInCurve: Curves.easeOutBack,
-            switchOutCurve: Curves.easeIn,
-            child: _LibraryStatus(
-              key: ValueKey(count),
-              articleCount: count,
-              onImport: _importPackage,
-            ),
+          _LibraryStatus(
+            articleCount: count,
+            onImport: _importPackage,
+          ),
+          _PackStatus(
+            installed: _packInstalled,
+            busy: _packBusy,
+            progress: _packProgress,
+            packBytes: widget.packManager.manifest.totalBytes,
+            onDownload: _downloadPack,
+            onCancel: _cancelPackDownload,
           ),
           Container(
             margin: const EdgeInsets.fromLTRB(16, 10, 16, 0),
@@ -219,7 +418,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 SizedBox(width: 9),
                 Expanded(
                   child: Text(
-                    'Modo de prueba: busco en textos guardados y te enseño las fuentes. El modelo generativo local aún está en desarrollo.',
+                    'El pack se descarga una vez; después, el chat y la biblioteca funcionan localmente. El modelo puede equivocarse.',
                     style: TextStyle(
                       color: Color(0xFF654315),
                       fontSize: 12,
@@ -257,6 +456,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       maxLines: 5,
                       textCapitalization: TextCapitalization.sentences,
                       onSubmitted: (_) => _send(),
+                      enabled: _generation == null,
                       decoration: InputDecoration(
                         hintText: 'Pregúntame algo…',
                         filled: true,
@@ -289,14 +489,22 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   const SizedBox(width: 9),
                   IconButton.filled(
-                    tooltip: 'Enviar',
-                    onPressed: _send,
+                    tooltip: _generation == null ? 'Enviar' : 'Detener respuesta',
+                    onPressed: _generation == null ? _send : _cancelGeneration,
                     style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xFFFFB74D),
-                      foregroundColor: const Color(0xFF49300D),
+                      backgroundColor: _generation == null
+                          ? const Color(0xFFFFB74D)
+                          : const Color(0xFF075C55),
+                      foregroundColor: _generation == null
+                          ? const Color(0xFF49300D)
+                          : Colors.white,
                       minimumSize: const Size(48, 48),
                     ),
-                    icon: const Icon(Icons.arrow_upward_rounded),
+                    icon: Icon(
+                      _generation == null
+                          ? Icons.arrow_upward_rounded
+                          : Icons.stop_rounded,
+                    ),
                   ),
                 ],
               ),
@@ -356,6 +564,138 @@ class _LibraryStatus extends StatelessWidget {
       ),
     );
   }
+}
+
+class _PackStatus extends StatelessWidget {
+  const _PackStatus({
+    required this.installed,
+    required this.busy,
+    required this.progress,
+    required this.packBytes,
+    required this.onDownload,
+    required this.onCancel,
+  });
+
+  final bool installed;
+  final bool busy;
+  final PackProgress? progress;
+  final int packBytes;
+  final VoidCallback onDownload;
+  final VoidCallback onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final current = progress;
+    final downloading = current?.stage == PackInstallStage.downloadingKnowledge ||
+        current?.stage == PackInstallStage.downloadingModel;
+    final ready = installed || current?.stage == PackInstallStage.ready;
+    final failed = current?.stage == PackInstallStage.failed;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFE7F8F0), Color(0xFFF9F2DF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(17),
+        border: Border.all(color: const Color(0xFFD4EBDD)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                ready ? Icons.verified_rounded : Icons.auto_awesome_rounded,
+                color: const Color(0xFF087F70),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  ready ? 'Pack offline listo' : 'Activa el chat con IA local',
+                  style: const TextStyle(
+                    color: Color(0xFF075C55),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              if (!ready && !busy)
+                TextButton.icon(
+                  onPressed: onDownload,
+                  icon: Icon(
+                    failed ? Icons.refresh_rounded : Icons.download_rounded,
+                    size: 18,
+                  ),
+                  label: Text(
+                    failed
+                        ? 'Reintentar'
+                        : 'Descargar · ${(packBytes / (1024 * 1024)).ceil()} MiB',
+                  ),
+                ),
+            ],
+          ),
+          if (ready)
+            const Text(
+              'Modelo y biblioteca en almacenamiento privado; el chat puede responder sin conexión.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF365D50)),
+            )
+          else if (current != null) ...[
+            const SizedBox(height: 7),
+            Text(
+              current.message,
+              style: const TextStyle(fontSize: 12, color: Color(0xFF365D50)),
+            ),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(
+              value: failed
+                  ? 0
+                  : downloading
+                  ? current.fraction
+                  : null,
+              minHeight: 6,
+              borderRadius: BorderRadius.circular(5),
+              color: const Color(0xFF0A9B79),
+              backgroundColor: Colors.white,
+            ),
+            const SizedBox(height: 5),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    '${(current.fraction * 100).round()}% · '
+                    '${_formatBytes(current.downloadedBytes)} / '
+                    '${_formatBytes(current.totalBytes)}',
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+                if (busy && downloading)
+                  TextButton(
+                    onPressed: onCancel,
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                    ),
+                    child: const Text('Cancelar'),
+                  ),
+              ],
+            ),
+          ] else
+            Text(
+              'Una descarga de aprox. ${(packBytes / (1024 * 1024)).ceil()} MiB requiere internet. Después, no se necesita red.',
+              style: const TextStyle(fontSize: 12, color: Color(0xFF365D50)),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+String _formatBytes(int bytes) {
+  if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)} KiB';
+  return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MiB';
 }
 
 class _ToxoMark extends StatelessWidget {
