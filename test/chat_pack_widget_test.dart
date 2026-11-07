@@ -65,9 +65,8 @@ void main() {
     expect(find.text('Descargar el pack offline'), findsOneWidget);
     await tester.tap(find.widgetWithText(FilledButton, 'Descargar'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
 
-    expect(find.text('Descargando la biblioteca abierta…'), findsOneWidget);
+    expect(find.text('Preparando la descarga…'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
     await tester.tap(find.text('Cancelar'));
     knowledgeResponse.complete();
