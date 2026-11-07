@@ -162,7 +162,10 @@ void main() {
 
     expect(find.textContaining('podemos charlar'), findsOneWidget);
     expect(find.text('Charla informal'), findsNothing);
-    expect(find.textContaining('Descarga el modelo local'), findsOneWidget);
+    expect(
+      find.textContaining('modelo local para una conversación'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('factual questions show matching local sources without a model', (
