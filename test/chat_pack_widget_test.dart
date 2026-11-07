@@ -346,7 +346,9 @@ void main() {
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Buscar actualización de Toxo'));
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Sin publicaciones disponibles'), findsOneWidget);
     expect(
