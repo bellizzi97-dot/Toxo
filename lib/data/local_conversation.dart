@@ -91,6 +91,7 @@ class LocalConversation {
   static bool _isClearlyConversational(String message) {
     return _matches(message, const [
       r'^(hoy )?(estoy|me siento)\b',
+      r'^(hoy )?me fue\b',
       r'^(me gusta|me encanta|no me gusta|prefiero)\b',
       r'^(quiero|quisiera|tengo ganas de) (hablar|charlar|conversar|platicar)\b',
       r'^(dime )?(que opinas|que piensas)\b',

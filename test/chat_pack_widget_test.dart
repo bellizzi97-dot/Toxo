@@ -160,7 +160,7 @@ void main() {
     await tester.tap(find.byTooltip('Enviar'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('Qué bueno'), findsOneWidget);
+    expect(find.textContaining('podemos charlar'), findsOneWidget);
     expect(find.text('Charla informal'), findsNothing);
     expect(
       find.textContaining('modelo local para una conversación'),
@@ -194,7 +194,7 @@ void main() {
     await tester.tap(find.byTooltip('Enviar'));
     await tester.pumpAndSettle();
     expect(find.text('Música'), findsNothing);
-    expect(find.textContaining('podemos charlar'), findsOneWidget);
+    expect(find.textContaining('Qué bueno'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), '¿y tú?');
     await tester.tap(find.byTooltip('Enviar'));

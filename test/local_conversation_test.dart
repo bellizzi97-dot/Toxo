@@ -4,10 +4,10 @@ import 'package:toxo/data/local_conversation.dart';
 void main() {
   group('LocalConversation', () {
     test('answers greetings warmly without searching the knowledge base', () {
-      expect(LocalConversation.replyTo('hola'), contains('Qué gusto leerte'));
+      expect(LocalConversation.replyTo('hola'), contains('Qué bueno verte'));
       expect(
         LocalConversation.replyTo('¡Buenos días, Toxo!'),
-        contains('¿Qué te gustaría explorar?'),
+        contains('¿Cómo va tu día?'),
       );
       expect(LocalConversation.replyTo('¿Qué tal?'), contains('¡Hola!'));
       expect(LocalConversation.isCasualChat('hola'), isTrue);
