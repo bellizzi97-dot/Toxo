@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
+      - main
       - bellizzi97-dot-ia-offline-multiplataforma
   pull_request:
     branches:

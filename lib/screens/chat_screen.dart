@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../data/local_conversation.dart';
 import '../data/knowledge_database.dart';
 import '../data/knowledge_package.dart';
 import 'settings_screen.dart';
@@ -35,10 +36,15 @@ class _ChatScreenState extends State<ChatScreen> {
     final question = (suggestion ?? _input.text).trim();
     if (question.isEmpty) return;
     final style = widget.database.style;
-    final results = widget.database.search(question);
+    final socialReply = LocalConversation.replyTo(question);
+    final results = socialReply == null ? widget.database.search(question) : [];
     setState(() {
       _messages.add(_ChatMessage(text: question, isAssistant: false));
-      if (results.isEmpty) {
+      if (socialReply != null) {
+        _messages.add(
+          _ChatMessage(text: socialReply, isAssistant: true),
+        );
+      } else if (results.isEmpty) {
         _messages.add(
           const _ChatMessage(
             text:

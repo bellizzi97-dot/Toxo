@@ -1,6 +1,6 @@
 # Toxo · asistente offline
 
-Base inicial en Flutter para Windows y Android. La interfaz, preferencias y biblioteca están pensadas para funcionar localmente; no se necesita una cuenta ni se envían consultas a un servidor.
+Aplicación Flutter enfocada por ahora en Android. La interfaz, preferencias y biblioteca funcionan localmente; no se necesita una cuenta ni se envían consultas a un servidor.
 
 ## Estado actual
 
@@ -10,9 +10,13 @@ Base inicial en Flutter para Windows y Android. La interfaz, preferencias y bibl
 - Memoria de preferencias explícitas, desactivada inicialmente; al apagarla, borra las preferencias guardadas.
 - Estilo de conversación cercano o breve.
 - Interfaz móvil renovada con tonos menta/teal, acentos cálidos y sugerencias de preguntas para probar.
-- Los archivos nativos del proyecto (`android/` y `windows/`) todavía deben generarse con Flutter; no están disponibles los SDKs para hacerlo en este entorno.
+- Saludos, agradecimientos y despedidas comunes reciben una respuesta local amigable y transparente en lugar del mensaje de “no lo encuentro”.
 - **Todavía no genera texto con un modelo de IA.** Devuelve pasajes encontrados y declara cuando la biblioteca no tiene respuesta. La integración nativa con `llama.cpp`/GGUF, la selección de un modelo con licencia compatible y las pruebas de rendimiento en dispositivos son trabajo pendiente.
 - No incluye artículos de Wikipedia ni Encarta. Importa únicamente paquetes cuyo contenido y licencia tengas derecho a usar; respeta atribución y demás condiciones de la fuente.
+
+## Alcance de plataformas
+
+El objetivo inmediato es que la aplicación sea cómoda y estable en Android: pruebas, APK de depuración y CI priorizan ese target. El port a Windows queda en espera; se conserva Flutter y la lógica portable para facilitarlo más adelante, pero no es parte de los criterios de aceptación actuales.
 
 ## Paquetes de conocimiento
 
@@ -42,17 +46,16 @@ Los paquetes de esta primera versión se limitan a 10 MB y 10 000 artículos. La
 
 ## Desarrollo y comprobaciones pendientes
 
-Con Flutter instalado:
+Con Flutter y Android SDK instalados:
 
 ```text
-flutter create --platforms=windows,android .
+flutter create --platforms=android .
 flutter pub get
 flutter test
-flutter run -d windows
 flutter run -d <id-del-dispositivo-android>
 ```
 
-Este entorno de desarrollo no incluye Flutter/Dart, Android SDK/ADB, NDK ni Visual Studio C++ Build Tools, por lo que todavía no se han podido ejecutar esas comprobaciones. Antes de distribuir, validar builds Windows/Android, disponibilidad de SQLite FTS5 en ambos targets y operación en modo avión. La app y los paquetes de conocimiento son datos locales; el modelo GGUF deberá ser un componente opcional independiente, con licencia y requisitos de memoria publicados, una vez se integre el runtime.
+La compilación Android y las pruebas se verifican en GitHub Actions. Antes de distribuir, validar la instalación y operación en modo avión en dispositivos físicos. El modelo GGUF deberá ser un componente opcional independiente, con licencia y requisitos de memoria publicados, una vez se integre el runtime.
 
 ## APK de prueba en GitHub Actions
 
