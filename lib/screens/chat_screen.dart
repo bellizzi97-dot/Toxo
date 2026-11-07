@@ -491,6 +491,11 @@ class _ChatScreenState extends State<ChatScreen> {
                       textCapitalization: TextCapitalization.sentences,
                       onSubmitted: (_) => _send(),
                       enabled: _generation == null,
+                      style: TextStyle(
+                        color: neuralTheme
+                            ? const Color(0xFFF0FAFC)
+                            : null,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'Pregúntame algo…',
                         filled: true,
@@ -500,11 +505,6 @@ class _ChatScreenState extends State<ChatScreen> {
                         hintStyle: TextStyle(
                           color: neuralTheme
                               ? const Color(0xFF9AB6C0)
-                              : null,
-                        ),
-                        style: TextStyle(
-                          color: neuralTheme
-                              ? const Color(0xFFF0FAFC)
                               : null,
                         ),
                         border: OutlineInputBorder(
@@ -947,7 +947,7 @@ class _PromptSuggestions extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'PRUEBA PREGUNTANDO',
             style: TextStyle(
               color: dark
@@ -1105,7 +1105,7 @@ class _MessageBubble extends StatelessWidget {
                             children: [
                               Row(
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.auto_stories_rounded,
                                     size: 18,
                                     color: dark
