@@ -260,7 +260,9 @@ class _ChatScreenState extends State<ChatScreen> {
       );
       await _assistant?.dispose();
       _assistant = null;
-      if (mounted) setState(() => _packInstalled = true);
+      if (mounted && _packProgress?.stage != PackInstallStage.failed) {
+        setState(() => _packInstalled = true);
+      }
     } on PackDownloadCancelled {
       // The manager already reports the cancellation in the progress panel.
     } on Object catch (error) {

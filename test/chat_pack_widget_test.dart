@@ -110,7 +110,7 @@ class _FakePackManager implements OfflinePackManager {
         totalBytes: manifest.totalBytes,
       ),
     );
-    _completion.completeError(const PackDownloadCancelled());
+    _completion.complete();
   }
 
   @override
