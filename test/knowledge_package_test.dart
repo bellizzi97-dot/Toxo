@@ -40,7 +40,10 @@ void main() {
     test('rejects unsupported schema versions', () {
       expect(
         () => KnowledgePackage.decode(
-          _packageJson().replaceFirst('"schemaVersion":1', '"schemaVersion":2'),
+          _packageJson().replaceFirst(
+            RegExp(r'"schemaVersion"\s*:\s*1'),
+            '"schemaVersion":2',
+          ),
         ),
         throwsFormatException,
       );
