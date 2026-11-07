@@ -57,12 +57,20 @@ jobs:
       - name: Stage the pinned llama.cpp Android runtime
         working-directory: android-build
         run: |
-          package_build_hook="$(find "$HOME/.pub-cache/git/checkouts" -type f -path '*/llama_cpp_dart-*/hook/build.dart' -print -quit)"
-          if [ -z "$package_build_hook" ]; then
-            echo "Could not locate the pinned llama_cpp_dart package in the pub cache." >&2
+          package_uri="$(jq -r '.packages[] | select(.name == "llama_cpp_dart") | .rootUri' .dart_tool/package_config.json)"
+          if [ -z "$package_uri" ] || [ "$package_uri" = "null" ]; then
+            echo "Could not locate llama_cpp_dart in the resolved package configuration." >&2
             exit 1
           fi
-          package_root="${package_build_hook%/hook/build.dart}"
+          case "$package_uri" in
+            file://*) package_root="${package_uri#file://}" ;;
+            /*) package_root="$package_uri" ;;
+            *) package_root="$(realpath ".dart_tool/$package_uri")" ;;
+          esac
+          if [ ! -f "$package_root/hook/build.dart" ]; then
+            echo "Resolved llama_cpp_dart package has no hook/build.dart at $package_root." >&2
+            exit 1
+          fi
           mkdir -p "$package_root/native/android"
           aar="$package_root/native/android/llama-cpp-dart.aar"
           curl --fail --location --retry 3 \
