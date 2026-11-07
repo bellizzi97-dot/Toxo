@@ -163,7 +163,7 @@ void main() {
     expect(find.textContaining('podemos charlar'), findsOneWidget);
     expect(find.text('Charla informal'), findsNothing);
     expect(
-      find.textContaining('modelo local para una conversación'),
+      find.textContaining('modelo local descargado'),
       findsOneWidget,
     );
   });

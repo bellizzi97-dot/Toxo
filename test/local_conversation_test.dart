@@ -9,7 +9,10 @@ void main() {
         LocalConversation.replyTo('¡Buenos días, Toxo!'),
         contains('¿Cómo va tu día?'),
       );
-      expect(LocalConversation.replyTo('¿Qué tal?'), contains('¡Hola!'));
+      expect(
+        LocalConversation.replyTo('¿Qué tal?'),
+        contains('Gracias por preguntar'),
+      );
       expect(LocalConversation.isCasualChat('hola'), isTrue);
     });
 
