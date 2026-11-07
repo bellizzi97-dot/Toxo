@@ -4,7 +4,17 @@ Toxo combina una biblioteca de consulta local con generación de texto en el pro
 
 La interfaz móvil tiene ahora un tema oscuro futurista con una red de nodos y conexiones dibujada en Flutter y pulsos animados detrás del chat. Es únicamente decorativa, no representa cálculos reales. En **Preferencias y privacidad → Apariencia** puedes elegir entre **Red neuronal** y **Menta**, y ajustar el fondo a Dinámica, Suave o Sin red. El fondo se detiene si Android solicita reducir el movimiento. La pantalla de chat no mantiene una banda offline; el estado de biblioteca/modelo está en Ajustes.
 
-Toxo también diferencia charla casual de consultas de conocimiento: las peticiones explícitas de conversar no muestran artículos ni citas irrelevantes y, si el modelo está instalado, se envían a la generación local. Sin el modelo, responde con una invitación breve y transparente. Las consultas factuales siguen buscando en la biblioteca y muestran sus fuentes.
+Toxo también diferencia charla casual de consultas de conocimiento: los comentarios cotidianos y los mensajes ambiguos se tratan como conversación, salvo que contengan una petición explícita de información (por ejemplo, «qué es», «explícame» o «háblame de»). La charla no muestra artículos ni citas; con el modelo instalado se envía al generador local con los últimos turnos de esta sesión y un límite corto de tokens. Las preguntas explícitas de investigación consultan la biblioteca y pueden mostrar fuentes. Esta distinción usa reglas conservadoras, no un clasificador entrenado, por lo que algunas frases ambiguas todavía pueden necesitar ajuste.
+
+Sin el modelo descargado no hay generación libre: Toxo ofrece respuestas sociales predefinidas, breves y transparentes, y las consultas factuales que no estén en la biblioteca indican que no encontró una fuente. No se debe interpretar el fondo de red neuronal como el proceso real del modelo ni como prueba de que hay inferencia disponible.
+
+## Conocimiento, memoria y personalidad
+
+- Para ampliar el conocimiento se pueden publicar paquetes temáticos separados y versionados (por ejemplo, ciencias, historia o astronomía), con URLs de fuente, atribución y licencia revisadas para cada artículo. Cada paquete agrega almacenamiento y debe incluir solo contenido redistribuible con licencia verificada; el corpus actual sigue siendo una selección de 40 entradas, no una enciclopedia completa.
+- La **Memoria local** es voluntaria: guarda únicamente las preferencias que la persona escribe en Ajustes y se pueden revisar, borrar individualmente o eliminar todas. Al desactivarla, sus notas se borran. No se entrena ni modifica el modelo.
+- El historial conversacional también es independiente y opt-in en Ajustes. Si se activa, conserva como máximo 100 mensajes en la base de datos privada de la app y los restaura al abrirla; desactivarlo los borra. Es local, no se sincroniza y no se usa para entrenar el modelo.
+- Una ampliación segura sería ofrecer recuerdos factuales explícitos (confirmar antes de guardar, editar y borrar). Preferencias, recuerdos e historial deben seguir siendo categorías separadas y controlables por la persona; la continuidad no requiere reentrenar pesos.
+- La personalidad se ajusta con instrucciones de estilo y ejemplos de diálogo; el modelo local de 0.5B es pequeño, así que la naturalidad y el seguimiento de contexto tienen límites. Respuestas más fluidas pueden requerir después comparar modelos locales mayores con el coste de más RAM, espacio, tiempo de descarga y batería.
 
 ## Pack adicional
 

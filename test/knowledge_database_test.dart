@@ -204,6 +204,29 @@ void main() {
     expect(database.memoryEnabled, isFalse);
     expect(database.style, 'breve');
   });
+
+  test('conversation history is opt-in, bounded, and erased when disabled', () {
+    database.saveConversationMessage(
+      const ConversationMessage(isAssistant: false, text: 'hola'),
+    );
+    expect(database.conversationHistory, isEmpty);
+
+    database.setConversationHistoryEnabled(true);
+    for (var index = 0; index < 105; index++) {
+      database.saveConversationMessage(
+        ConversationMessage(isAssistant: index.isOdd, text: 'mensaje $index'),
+      );
+    }
+
+    expect(database.conversationHistory, hasLength(100));
+    expect(database.conversationHistory.first.text, 'mensaje 5');
+    expect(database.conversationHistory.last.text, 'mensaje 104');
+
+    database.setConversationHistoryEnabled(false);
+
+    expect(database.conversationHistoryEnabled, isFalse);
+    expect(database.conversationHistory, isEmpty);
+  });
 }
 
 KnowledgePackage _package() => const KnowledgePackage(

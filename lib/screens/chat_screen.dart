@@ -42,10 +42,11 @@ class _ChatScreenState extends State<ChatScreen> {
   LocalModelAssistant? _assistant;
   StreamSubscription<String>? _generation;
   Completer<void>? _generationCompletion;
+  bool _lastTurnWasCasual = false;
   final _messages = <_ChatMessage>[
     const _ChatMessage(
       text:
-          '¡Hola! Soy Toxo. Puedo buscar en mi biblioteca y conversar con un modelo local pequeño. A veces puedo equivocarme; si uso la biblioteca, te mostraré las fuentes.',
+          '¡Hola! Soy Toxo. Podemos charlar; con el modelo local descargado la conversación será más flexible. Si me pides investigar, buscaré en mi biblioteca y te mostraré las fuentes.',
       isAssistant: true,
     ),
   ];
@@ -53,6 +54,21 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.database.conversationHistoryEnabled) {
+      final saved = widget.database.conversationHistory;
+      if (saved.isNotEmpty) {
+        _messages
+          ..clear()
+          ..addAll(
+            saved.map(
+              (message) => _ChatMessage(
+                text: message.text,
+                isAssistant: message.isAssistant,
+              ),
+            ),
+          );
+      }
+    }
     _refreshPackStatus();
   }
 
@@ -89,7 +105,12 @@ class _ChatScreenState extends State<ChatScreen> {
     if (question.isEmpty) return;
     final style = widget.database.style;
     final socialReply = LocalConversation.replyTo(question);
-    final casualChat = LocalConversation.isCasualChat(question);
+    final casualChat = LocalConversation.isCasualChat(
+      question,
+      previousTurnWasCasual: _lastTurnWasCasual,
+    );
+    final history = _recentConversation();
+    _lastTurnWasCasual = casualChat;
     final List<KnowledgeResult> results =
         socialReply == null && !casualChat
         ? widget.database.search(question)
@@ -114,7 +135,7 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.add(
           _ChatMessage(
             text: casualChat
-                ? 'Claro, podemos charlar 😊 Ahora puedo responder con frases sencillas; descarga el modelo local para una conversación más flexible. ¿Qué tienes en mente?'
+                ? LocalConversation.casualFallback(question)
                 : 'Todavía no encuentro eso en tu biblioteca local. Descarga el pack para habilitar respuestas generadas por el modelo local; no voy a inventar una respuesta.',
             isAssistant: true,
           ),
@@ -133,6 +154,9 @@ class _ChatScreenState extends State<ChatScreen> {
       }
       _input.clear();
     });
+    widget.database.saveConversationMessage(
+      ConversationMessage(isAssistant: false, text: question),
+    );
     if (installed) {
       final messageIndex = _messages.length - 1;
       final completer = Completer<void>();
@@ -142,7 +166,12 @@ class _ChatScreenState extends State<ChatScreen> {
         database: widget.database,
       );
       _generation = _assistant!
-          .generate(question: question, sources: results)
+          .generate(
+            question: question,
+            sources: results,
+            casual: casualChat,
+            history: history,
+          )
           .listen(
             (token) {
               if (!mounted) return;
@@ -185,14 +214,42 @@ class _ChatScreenState extends State<ChatScreen> {
                     );
                   });
                 }
+                _saveAssistantMessage(messageIndex);
               }
               _finishGeneration(completer);
             },
             cancelOnError: true,
           );
       await completer.future;
+    } else if (mounted) {
+      _saveAssistantMessage(_messages.length - 1);
     }
     _scrollToBottom();
+  }
+
+  void _saveAssistantMessage(int index) {
+    if (index < 0 || index >= _messages.length) return;
+    final message = _messages[index];
+    if (message.isAssistant && message.text != 'Preparando el modelo local…') {
+      widget.database.saveConversationMessage(
+        ConversationMessage(isAssistant: true, text: message.text),
+      );
+    }
+  }
+
+  List<LocalChatTurn> _recentConversation() {
+    final turns = <LocalChatTurn>[];
+    for (final message in _messages) {
+      final text = message.text.trim();
+      if (text.isEmpty || text == 'Preparando el modelo local…') continue;
+      turns.add(
+        LocalChatTurn(
+          isAssistant: message.isAssistant,
+          text: text,
+        ),
+      );
+    }
+    return LocalChatPrompt.recentHistory(turns);
   }
 
   void _finishGeneration(Completer<void> completer) {
@@ -211,6 +268,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final completion = _generationCompletion;
     _generationCompletion = null;
     await generation.cancel();
+    _saveAssistantMessage(_messages.length - 1);
     if (completion != null && !completion.isCompleted) completion.complete();
     if (mounted) setState(() {});
   }

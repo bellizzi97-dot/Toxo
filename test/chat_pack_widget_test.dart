@@ -160,12 +160,79 @@ void main() {
     await tester.tap(find.byTooltip('Enviar'));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('podemos charlar'), findsOneWidget);
+    expect(find.textContaining('Qué bueno'), findsOneWidget);
     expect(find.text('Charla informal'), findsNothing);
     expect(
       find.textContaining('modelo local para una conversación'),
       findsOneWidget,
     );
+  });
+
+  testWidgets('greetings and personal comments do not show knowledge cards', (
+    tester,
+  ) async {
+    database.importPackage(
+      const KnowledgePackage(
+        packageId: 'music-chat-test',
+        sourceTitle: 'Prueba',
+        license: 'CC0-1.0',
+        attribution: 'Toxo',
+        sourceUrl: 'https://example.test/library',
+        articles: [
+          KnowledgeArticle(
+            id: 'music',
+            title: 'Música',
+            text: 'La música puede escucharse en diferentes géneros.',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(_chatApp(database, manager));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'me gusta la música');
+    await tester.tap(find.byTooltip('Enviar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Música'), findsNothing);
+    expect(find.textContaining('podemos charlar'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), '¿y tú?');
+    await tester.tap(find.byTooltip('Enviar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Música'), findsNothing);
+    expect(find.textContaining('respuestas son sencillas'), findsOneWidget);
+  });
+
+  testWidgets('opt-in conversation history restores and can be erased', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_chatApp(database, manager));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Preferencias'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar historial de conversación'));
+    await tester.pumpAndSettle();
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextField), 'me gusta la música');
+    await tester.tap(find.byTooltip('Enviar'));
+    await tester.pumpAndSettle();
+    expect(database.conversationHistory, hasLength(2));
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    await tester.pumpWidget(_chatApp(database, manager));
+    await tester.pumpAndSettle();
+    expect(find.text('me gusta la música'), findsOneWidget);
+    expect(find.textContaining('Qué bueno'), findsOneWidget);
+
+    await tester.tap(find.byTooltip('Preferencias'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar historial de conversación'));
+    await tester.pumpAndSettle();
+    expect(database.conversationHistory, isEmpty);
+    expect(database.conversationHistoryEnabled, isFalse);
   });
 
   testWidgets('factual questions show matching local sources without a model', (
@@ -205,6 +272,25 @@ void main() {
     expect(find.text('¡Encontré algo útil en tu biblioteca! Aquí tienes los pasajes más cercanos:'), findsOneWidget);
     expect(find.text('Fotosíntesis'), findsOneWidget);
     expect(find.textContaining('Fuente abierta'), findsOneWidget);
+    expect(find.textContaining('podemos charlar'), findsNothing);
+  });
+
+  testWidgets('unknown explicit research does not become casual conversation', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_chatApp(database, manager));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byType(TextField),
+      'Quiero saber sobre las auroras boreales',
+    );
+    await tester.tap(find.byTooltip('Enviar'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.textContaining('Todavía no encuentro eso en tu biblioteca local'),
+      findsOneWidget,
+    );
     expect(find.textContaining('podemos charlar'), findsNothing);
   });
 

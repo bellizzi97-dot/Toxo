@@ -177,10 +177,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  Future<void> _clearConversationHistory() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Borrar historial'),
+        content: const Text(
+          'Se eliminarán los mensajes guardados en este dispositivo.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Borrar'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      widget.database.clearConversationHistory();
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final enabled = widget.database.memoryEnabled;
     final memories = widget.database.memories;
+    final historyEnabled = widget.database.conversationHistoryEnabled;
+    final historyCount = widget.database.conversationHistory.length;
     final neuralTheme = widget.database.appearance == 'neural';
     return Scaffold(
       appBar: AppBar(title: const Text('Preferencias y privacidad')),
@@ -294,6 +322,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               },
             ),
           ),
+          Card(
+            child: SwitchListTile(
+              title: const Text('Guardar historial de conversación'),
+              subtitle: const Text(
+                'Opcional y solo en este dispositivo. Conserva hasta 100 mensajes; al desactivarlo se borran.',
+              ),
+              value: historyEnabled,
+              onChanged: (value) {
+                widget.database.setConversationHistoryEnabled(value);
+                setState(() {});
+              },
+            ),
+          ),
+          if (historyEnabled && historyCount > 0)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: _clearConversationHistory,
+                icon: const Icon(Icons.delete_outline),
+                label: Text('Borrar historial ($historyCount mensajes)'),
+              ),
+            ),
           const SizedBox(height: 8),
           const Text(
             'Estilo de conversación',

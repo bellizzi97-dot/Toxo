@@ -27,6 +27,16 @@ class MemoryPreference {
   final String note;
 }
 
+class ConversationMessage {
+  const ConversationMessage({
+    required this.isAssistant,
+    required this.text,
+  });
+
+  final bool isAssistant;
+  final String text;
+}
+
 class KnowledgeDatabase {
   KnowledgeDatabase(this._db);
 
@@ -90,7 +100,8 @@ class KnowledgeDatabase {
         memory_enabled INTEGER NOT NULL DEFAULT 0,
         style TEXT NOT NULL DEFAULT 'cercano',
         appearance TEXT NOT NULL DEFAULT 'neural',
-        visual_effects TEXT NOT NULL DEFAULT 'dynamic'
+        visual_effects TEXT NOT NULL DEFAULT 'dynamic',
+        conversation_history_enabled INTEGER NOT NULL DEFAULT 0
       )
     ''');
     final preferenceColumns = _db
@@ -107,6 +118,12 @@ class KnowledgeDatabase {
         "ALTER TABLE preferences ADD COLUMN visual_effects TEXT NOT NULL DEFAULT 'dynamic'",
       );
     }
+    if (!preferenceColumns.contains('conversation_history_enabled')) {
+      _db.execute(
+        'ALTER TABLE preferences ADD COLUMN conversation_history_enabled '
+        'INTEGER NOT NULL DEFAULT 0',
+      );
+    }
     _db.execute(
       "INSERT OR IGNORE INTO preferences(id, memory_enabled, style) "
       "VALUES (1, 0, 'cercano')",
@@ -118,6 +135,14 @@ class KnowledgeDatabase {
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     ''');
+    _db.execute('''
+      CREATE TABLE IF NOT EXISTS conversation_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        is_assistant INTEGER NOT NULL,
+        text TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
   }
 
   int get articleCount =>
@@ -126,6 +151,14 @@ class KnowledgeDatabase {
   bool get memoryEnabled =>
       _db.select('SELECT memory_enabled FROM preferences WHERE id = 1')
           .first['memory_enabled'] ==
+      1;
+
+  bool get conversationHistoryEnabled =>
+      _db
+          .select(
+            'SELECT conversation_history_enabled FROM preferences WHERE id = 1',
+          )
+          .first['conversation_history_enabled'] ==
       1;
 
   String get style => _db.select(
@@ -148,6 +181,46 @@ class KnowledgeDatabase {
     if (!enabled) {
       _db.execute('DELETE FROM memories');
     }
+  }
+
+  void setConversationHistoryEnabled(bool enabled) {
+    _db.execute(
+      'UPDATE preferences SET conversation_history_enabled = ? WHERE id = 1',
+      [enabled ? 1 : 0],
+    );
+    if (!enabled) clearConversationHistory();
+  }
+
+  void saveConversationMessage(ConversationMessage message) {
+    if (!conversationHistoryEnabled) return;
+    final text = message.text.trim();
+    if (text.isEmpty) return;
+    _db.execute(
+      'INSERT INTO conversation_history(is_assistant, text) VALUES (?, ?)',
+      [message.isAssistant ? 1 : 0, text],
+    );
+    _db.execute(
+      'DELETE FROM conversation_history WHERE id NOT IN '
+      '(SELECT id FROM conversation_history ORDER BY id DESC LIMIT 100)',
+    );
+  }
+
+  List<ConversationMessage> get conversationHistory => _db
+      .select(
+        'SELECT is_assistant, text FROM conversation_history ORDER BY id DESC LIMIT 100',
+      )
+      .toList(growable: false)
+      .reversed
+      .map(
+        (row) => ConversationMessage(
+          isAssistant: row['is_assistant'] == 1,
+          text: row['text'] as String,
+        ),
+      )
+      .toList(growable: false);
+
+  void clearConversationHistory() {
+    _db.execute('DELETE FROM conversation_history');
   }
 
   void setStyle(String value) {

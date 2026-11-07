@@ -1,3 +1,5 @@
+enum ChatIntent { casual, research }
+
 class LocalConversation {
   const LocalConversation._();
 
@@ -5,44 +7,108 @@ class LocalConversation {
     final message = _normalize(input);
     if (message.isEmpty) return null;
 
-    if (_matches(message, const [
+    if (RegExp(
       r'^(hola|holi|hey|buenas|buenos dias|buenas tardes|buenas noches)( toxo)?$',
-      r'^(que tal|como estas|como te va|como vas)( hoy)?$',
-    ])) {
-      return '¡Hola! 😊 Qué gusto leerte. Estoy aquí para buscar contigo en mi biblioteca local. ¿Qué te gustaría explorar?';
+    ).hasMatch(message)) {
+      return '¡Hola! 😊 Qué bueno verte. ¿Cómo va tu día? Si quieres, charlamos; mientras no esté instalado el modelo, mis respuestas serán sencillas.';
     }
 
-    if (_matches(message, const [
-      r'^(gracias|muchas gracias|te lo agradezco|mil gracias)$',
-    ])) {
-      return '¡De nada! 💚 Me alegra echarte una mano. ¿Buscamos algo más?';
+    if (RegExp(r'^(que tal|como estas|como te va|como vas)( hoy)?$')
+        .hasMatch(message)) {
+      return '¡Gracias por preguntar! 😊 Estoy aquí contigo. ¿Y tú, cómo vas?';
     }
 
-    if (_matches(message, const [
-      r'^(adios|hasta luego|nos vemos|chao|bye)$',
-    ])) {
-      return '¡Hasta luego! 👋 Aquí estaré cuando quieras seguir explorando.';
+    if (RegExp(r'^(gracias|muchas gracias|te lo agradezco|mil gracias)$')
+        .hasMatch(message)) {
+      return '¡De nada! 💚 Qué bueno que te sirvió.';
     }
 
-    if (_matches(message, const [
-      r'^(quien eres|que eres|que puedes hacer|para que sirves)$',
-    ])) {
+    if (RegExp(r'^(adios|hasta luego|nos vemos|chao|bye)$')
+        .hasMatch(message)) {
+      return '¡Hasta luego! 👋 Me gustó charlar contigo.';
+    }
+
+    if (RegExp(r'^(quien eres|que eres|que puedes hacer|para que sirves)$')
+        .hasMatch(message)) {
       return 'Soy Toxo, tu compa local. Por ahora busco en los textos guardados en este dispositivo y te muestro sus fuentes. Todavía no tengo un modelo generativo, así que si algo no está en la biblioteca, te lo diré con honestidad.';
     }
 
     return null;
   }
 
-  static bool isCasualChat(String input) {
+  static ChatIntent intentFor(
+    String input, {
+    bool previousTurnWasCasual = false,
+  }) {
     final message = _normalize(input);
-    if (replyTo(input) != null) return true;
+    if (_isExplicitInformationRequest(message)) return ChatIntent.research;
+    if (replyTo(input) != null || _isClearlyConversational(message)) {
+      return ChatIntent.casual;
+    }
+    if (_isInformationQuestion(message)) return ChatIntent.research;
+    if (previousTurnWasCasual) return ChatIntent.casual;
+
+    // Ambiguous messages are conversation by default; factual questions and
+    // explicit learning requests are routed to local retrieval.
+    return ChatIntent.casual;
+  }
+
+  static bool isCasualChat(
+    String input, {
+    bool previousTurnWasCasual = false,
+  }) =>
+      intentFor(input, previousTurnWasCasual: previousTurnWasCasual) ==
+      ChatIntent.casual;
+
+  static String casualFallback(String input) {
+    final message = _normalize(input);
+    if (RegExp(r'^(hoy )?(estoy|me siento) (cansado|cansada|agotado|agotada)$')
+        .hasMatch(message)) {
+      return 'Uy, lo siento. Suena a que ha sido un día largo. ¿Quieres contarme qué pasó?';
+    }
+    if (RegExp(r'^(me gusta|me encanta) ').hasMatch(message)) {
+      return '¡Qué bueno! 😊 ¿Qué es lo que más te gusta de eso?';
+    }
+    if (RegExp(r'^(y tu|y a ti)$').hasMatch(message)) {
+      return 'Aquí, acompañándote 😊 Todavía no tengo el modelo local descargado, así que por ahora mis respuestas son sencillas.';
+    }
+    if (RegExp(r'^(cuentame|dime) algo$').hasMatch(message)) {
+      return 'Va, un chistecito: ¿qué hace una abeja en el gimnasio? ¡Zum-ba! 😄 ¿Te cuento otro?';
+    }
+    return 'Claro, podemos charlar 😊 Aún no tengo el modelo local descargado, así que por ahora mis respuestas son sencillas. ¿Qué tienes en mente?';
+  }
+
+  static bool _isExplicitInformationRequest(String message) {
     return _matches(message, const [
-      r'\b(quiero|quisiera|me gustaria|tengo ganas de) (hablar|charlar|conversar|platicar)\b',
-      r'\b(que haces|que opinas|como te sientes|como estuvo tu dia)\b',
-      r'\b(estoy|me siento) (aburrido|sola|solo|cansada|cansado)\b',
-      r'^(cuentame|dime) (algo|un chiste|una historia|algo divertido)$',
-      r'\b(hablemos|charlemos|platiquemos|conversemos)\b',
+      r'\b(que es|que son|quien fue|quienes fueron|quien era|quienes eran)\b',
+      r'\b(como funciona|como funcionan|como se forma|como se produce|como se hace|como ocurre|como sucedio)\b',
+      r'\b(por que|para que sirve|cual es|cuales son|cuanto mide|cuantos|cuantas|cuando ocurrio|donde esta|donde se encuentra|que significa)\b',
+      r'\b(explica|explicame|podrias explicarme|define|investiga|busca|consulta|averigua|dime informacion|dame informacion|informacion sobre|que sabes de|hablame de|hablame sobre|cuentame sobre|quiero saber|quiero conocer|me puedes decir|puedes decirme|podrias decirme)\b',
+      r'\b(busca en la biblioteca|usa tus fuentes|quiero investigar|necesito saber|dame detalles)\b',
     ]);
+  }
+
+  static bool _isClearlyConversational(String message) {
+    return _matches(message, const [
+      r'^(hoy )?(estoy|me siento)\b',
+      r'^(me gusta|me encanta|no me gusta|prefiero)\b',
+      r'^(quiero|quisiera|tengo ganas de) (hablar|charlar|conversar|platicar)\b',
+      r'^(dime )?(que opinas|que piensas)\b',
+      r'^(que haces|que opinas|que piensas|que te parece|que tal|que onda|que pasa|que quieres hacer|como estas|como te va|como vas|como te sientes|como estuvo tu dia|como va tu dia)\b',
+      r'^(cuentame|dime) (algo|un chiste|una historia|algo divertido)\b',
+      r'^(hablemos|charlemos|platiquemos|conversemos)\b',
+      r'^(y tu|y a ti|a mi tambien|jaja|jajaja|entiendo|claro|si|no)$',
+    ]);
+  }
+
+  static bool _isInformationQuestion(String message) {
+    final startsWithQuestionWord = RegExp(
+      r'^(que|quien|quienes|cuando|donde|como|por que|para que|cual|cuales|cuanto|cuanta|cuantos|cuantas)\b',
+    ).hasMatch(message);
+    final asksAboutFact = RegExp(
+      r'\b(es|son|fue|eran|esta|estan|tiene|tienen|necesita|necesitan|puede|pueden|causa|causan|produce|producen|contiene|contienen|provoca|provocan|afecta|afectan|significa|sirve)\b',
+    ).hasMatch(message);
+    return startsWithQuestionWord || asksAboutFact;
   }
 
   static bool _matches(String message, List<String> patterns) {
