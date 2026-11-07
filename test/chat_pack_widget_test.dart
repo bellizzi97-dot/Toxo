@@ -64,7 +64,7 @@ void main() {
       manifest: OfflinePackManifest.decode(jsonEncode(_manifestJson)),
       database: database,
       supportDirectory: supportDirectory,
-      hasInstalledPack: true,
+      hasInstalledPackValue: true,
       updateAvailable: true,
     );
     await tester.pumpWidget(
@@ -85,7 +85,7 @@ void main() {
       database: database,
       supportDirectory: supportDirectory,
       installed: true,
-      hasInstalledPack: true,
+      hasInstalledPackValue: true,
     );
     await tester.pumpWidget(
       MaterialApp(home: ChatScreen(database: database, packManager: manager)),
@@ -103,7 +103,7 @@ class _FakePackManager implements OfflinePackManager {
     required this.database,
     required this.supportDirectory,
     this.installed = false,
-    this.hasInstalledPack = false,
+    this.hasInstalledPackValue = false,
     this.updateAvailable = false,
   });
 
@@ -115,7 +115,7 @@ class _FakePackManager implements OfflinePackManager {
   final Directory supportDirectory;
   final bool installed;
   @override
-  final bool hasInstalledPack;
+  final bool hasInstalledPackValue;
   final bool updateAvailable;
 
   final _completion = Completer<void>();
@@ -127,6 +127,9 @@ class _FakePackManager implements OfflinePackManager {
 
   @override
   Future<bool> get isInstalled async => installed;
+
+  @override
+  Future<bool> get hasInstalledPack async => hasInstalledPackValue;
 
   @override
   Future<bool> get hasUpdate async => updateAvailable;
