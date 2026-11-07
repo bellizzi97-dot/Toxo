@@ -84,7 +84,7 @@ void main() {
 
     test('bundled library has 40 attributed entries from compatible licenses', () {
       final package = KnowledgePackage.decode(
-        File('assets/packs/toxo-conocimientos-es-v2.json').readAsStringSync(),
+        File('assets/packs/toxo-conocimientos-es-v3.json').readAsStringSync(),
       );
 
       expect(package.articles, hasLength(40));
@@ -101,6 +101,36 @@ void main() {
             .where((article) => article.license == 'CC BY-SA 4.0')
             .every((article) => article.sourceUrl!.contains('oldid=')),
         isTrue,
+      );
+    });
+
+    test('preserves Spanish accents and UTF-8 source metadata', () {
+      final package = KnowledgePackage.decode(
+        File('assets/packs/toxo-conocimientos-es-v3.json').readAsStringSync(),
+      );
+      final photosynthesis = package.articles.singleWhere(
+        (article) => article.title == 'Fotosíntesis',
+      );
+      final ecosystem = package.articles.singleWhere(
+        (article) => article.title == 'Ecosistemas',
+      );
+      final atom = package.articles.singleWhere(
+        (article) => article.title == 'Átomo',
+      );
+
+      expect(photosynthesis.text, contains('energía'));
+      expect(ecosystem.text, contains('físicos'));
+      expect(atom.text, contains('químicos'));
+      expect(atom.sourceTitle, contains('español'));
+      expect(atom.sourceUrl, contains('oldid='));
+      expect(
+        package.articles.any(
+          (article) =>
+              article.title.contains('Ã') ||
+              article.text.contains('Ã') ||
+              article.text.contains('â€'),
+        ),
+        isFalse,
       );
     });
   });

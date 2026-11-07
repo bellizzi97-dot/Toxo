@@ -10,6 +10,7 @@ void main() {
         contains('¿Qué te gustaría explorar?'),
       );
       expect(LocalConversation.replyTo('¿Qué tal?'), contains('¡Hola!'));
+      expect(LocalConversation.isCasualChat('hola'), isTrue);
     });
 
     test('handles thanks and farewells', () {
@@ -26,6 +27,17 @@ void main() {
 
     test('leaves knowledge questions to local retrieval', () {
       expect(LocalConversation.replyTo('¿Cómo funciona la fotosíntesis?'), isNull);
+      expect(LocalConversation.isCasualChat('¿Cómo funciona la fotosíntesis?'), isFalse);
+    });
+
+    test('routes explicit casual conversation away from knowledge retrieval', () {
+      expect(
+        LocalConversation.isCasualChat(
+          'No tengo nada que investigar y solo quisiera charlar un poco',
+        ),
+        isTrue,
+      );
+      expect(LocalConversation.isCasualChat('Cuéntame un chiste'), isTrue);
     });
   });
 }

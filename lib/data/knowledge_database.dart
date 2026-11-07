@@ -88,9 +88,25 @@ class KnowledgeDatabase {
       CREATE TABLE IF NOT EXISTS preferences (
         id INTEGER PRIMARY KEY CHECK (id = 1),
         memory_enabled INTEGER NOT NULL DEFAULT 0,
-        style TEXT NOT NULL DEFAULT 'cercano'
+        style TEXT NOT NULL DEFAULT 'cercano',
+        appearance TEXT NOT NULL DEFAULT 'neural',
+        visual_effects TEXT NOT NULL DEFAULT 'dynamic'
       )
     ''');
+    final preferenceColumns = _db
+        .select('PRAGMA table_info(preferences)')
+        .map((row) => row['name'] as String)
+        .toSet();
+    if (!preferenceColumns.contains('appearance')) {
+      _db.execute(
+        "ALTER TABLE preferences ADD COLUMN appearance TEXT NOT NULL DEFAULT 'neural'",
+      );
+    }
+    if (!preferenceColumns.contains('visual_effects')) {
+      _db.execute(
+        "ALTER TABLE preferences ADD COLUMN visual_effects TEXT NOT NULL DEFAULT 'dynamic'",
+      );
+    }
     _db.execute(
       "INSERT OR IGNORE INTO preferences(id, memory_enabled, style) "
       "VALUES (1, 0, 'cercano')",
@@ -116,6 +132,14 @@ class KnowledgeDatabase {
         'SELECT style FROM preferences WHERE id = 1',
       ).first['style'] as String;
 
+  String get appearance => _db.select(
+        'SELECT appearance FROM preferences WHERE id = 1',
+      ).first['appearance'] as String;
+
+  String get visualEffects => _db.select(
+        'SELECT visual_effects FROM preferences WHERE id = 1',
+      ).first['visual_effects'] as String;
+
   void setMemoryEnabled(bool enabled) {
     _db.execute(
       'UPDATE preferences SET memory_enabled = ? WHERE id = 1',
@@ -131,6 +155,26 @@ class KnowledgeDatabase {
       throw ArgumentError.value(value, 'value', 'Estilo no admitido.');
     }
     _db.execute('UPDATE preferences SET style = ? WHERE id = 1', [value]);
+  }
+
+  void setAppearance(String value) {
+    if (value != 'neural' && value != 'mint') {
+      throw ArgumentError.value(value, 'value', 'Tema no admitido.');
+    }
+    _db.execute(
+      'UPDATE preferences SET appearance = ? WHERE id = 1',
+      [value],
+    );
+  }
+
+  void setVisualEffects(String value) {
+    if (value != 'dynamic' && value != 'subtle' && value != 'off') {
+      throw ArgumentError.value(value, 'value', 'Intensidad no admitida.');
+    }
+    _db.execute(
+      'UPDATE preferences SET visual_effects = ? WHERE id = 1',
+      [value],
+    );
   }
 
   void remember(String note) {

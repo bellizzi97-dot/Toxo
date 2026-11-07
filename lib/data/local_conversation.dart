@@ -33,6 +33,18 @@ class LocalConversation {
     return null;
   }
 
+  static bool isCasualChat(String input) {
+    final message = _normalize(input);
+    if (replyTo(input) != null) return true;
+    return _matches(message, const [
+      r'\b(quiero|quisiera|me gustaria|tengo ganas de) (hablar|charlar|conversar|platicar)\b',
+      r'\b(que haces|que opinas|como te sientes|como estuvo tu dia)\b',
+      r'\b(estoy|me siento) (aburrido|sola|solo|cansada|cansado)\b',
+      r'^(cuentame|dime) (algo|un chiste|una historia|algo divertido)$',
+      r'\b(hablemos|charlemos|platiquemos|conversemos)\b',
+    ]);
+  }
+
   static bool _matches(String message, List<String> patterns) {
     return patterns.any((pattern) => RegExp(pattern).hasMatch(message));
   }

@@ -35,7 +35,7 @@ Future<void> main() async {
   );
 }
 
-class ToxoApp extends StatelessWidget {
+class ToxoApp extends StatefulWidget {
   const ToxoApp({
     required this.database,
     required this.packManager,
@@ -48,25 +48,39 @@ class ToxoApp extends StatelessWidget {
   final AppUpdateChecker appUpdateChecker;
 
   @override
+  State<ToxoApp> createState() => _ToxoAppState();
+}
+
+class _ToxoAppState extends State<ToxoApp> {
+  @override
   Widget build(BuildContext context) {
-    const seedColor = Color(0xFF087F70);
+    final neuralTheme = widget.database.appearance == 'neural';
     return MaterialApp(
       title: 'Toxo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: seedColor),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: neuralTheme
+              ? const Color(0xFF38E0C0)
+              : const Color(0xFF087F70),
+          brightness: neuralTheme ? Brightness.dark : Brightness.light,
+        ),
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF3FAF5),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF087F70),
+        scaffoldBackgroundColor:
+            neuralTheme ? const Color(0xFF071622) : const Color(0xFFF3FAF5),
+        appBarTheme: AppBarTheme(
+          backgroundColor: neuralTheme
+              ? const Color(0xFF0B2735)
+              : const Color(0xFF087F70),
           foregroundColor: Colors.white,
           centerTitle: false,
         ),
       ),
       home: ChatScreen(
-        database: database,
-        packManager: packManager,
-        appUpdateChecker: appUpdateChecker,
+        database: widget.database,
+        packManager: widget.packManager,
+        appUpdateChecker: widget.appUpdateChecker,
+        onAppearanceChanged: () => setState(() {}),
       ),
     );
   }

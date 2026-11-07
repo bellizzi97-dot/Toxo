@@ -3,16 +3,21 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../data/app_update_checker.dart';
 import '../data/knowledge_database.dart';
+import '../data/offline_pack_manager.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     required this.database,
     this.appUpdateChecker,
+    this.packManager,
+    this.onAppearanceChanged,
     super.key,
   });
 
   final KnowledgeDatabase database;
   final AppUpdateChecker? appUpdateChecker;
+  final OfflinePackManager? packManager;
+  final VoidCallback? onAppearanceChanged;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -20,6 +25,32 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _checkingUpdates = false;
+  bool? _packInstalled;
+  bool _hasInstalledPack = false;
+  bool _packUpdateAvailable = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshPackStatus();
+  }
+
+  Future<void> _refreshPackStatus() async {
+    final manager = widget.packManager;
+    if (manager == null) return;
+    final status = await Future.wait<bool>([
+      manager.isInstalled,
+      manager.hasInstalledPack,
+      manager.hasUpdate,
+    ]);
+    if (mounted) {
+      setState(() {
+        _packInstalled = status[0];
+        _hasInstalledPack = status[1];
+        _packUpdateAvailable = status[2];
+      });
+    }
+  }
 
   Future<void> _checkForUpdates() async {
     final checker = widget.appUpdateChecker;
@@ -150,11 +181,86 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final enabled = widget.database.memoryEnabled;
     final memories = widget.database.memories;
+    final neuralTheme = widget.database.appearance == 'neural';
     return Scaffold(
       appBar: AppBar(title: const Text('Preferencias y privacidad')),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.wifi_off_rounded),
+              title: const Text('Modo sin conexión'),
+              subtitle: Text(
+                _packInstalled == null
+                    ? 'Comprobando biblioteca y modelo local…'
+                    : _packInstalled!
+                    ? '${widget.database.articleCount} artículos y el modelo local están listos en este dispositivo.'
+                    : _hasInstalledPack && _packUpdateAvailable
+                    ? '${widget.database.articleCount} artículos y el modelo actual siguen disponibles sin conexión; hay una actualización del pack pendiente.'
+                    : _hasInstalledPack
+                    ? '${widget.database.articleCount} artículos y el modelo actual están instalados en este dispositivo.'
+                    : '${widget.database.articleCount} artículos locales. Descarga el pack para habilitar el modelo generativo offline.',
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Apariencia',
+            style: TextStyle(fontWeight: FontWeight.w700),
+          ),
+          RadioListTile<String>(
+            title: const Text('Red neuronal'),
+            subtitle: const Text('Fondo oscuro con conexiones y pulsos ilustrativos.'),
+            value: 'neural',
+            groupValue: widget.database.appearance,
+            onChanged: (value) {
+              if (value == null) return;
+              widget.database.setAppearance(value);
+              setState(() {});
+              widget.onAppearanceChanged?.call();
+            },
+          ),
+          RadioListTile<String>(
+            title: const Text('Menta'),
+            subtitle: const Text('Colores claros y cálidos.'),
+            value: 'mint',
+            groupValue: widget.database.appearance,
+            onChanged: (value) {
+              if (value == null) return;
+              widget.database.setAppearance(value);
+              setState(() {});
+              widget.onAppearanceChanged?.call();
+            },
+          ),
+          if (neuralTheme) ...[
+            const SizedBox(height: 8),
+            const Text(
+              'Intensidad visual',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'dynamic', label: Text('Dinámica')),
+                ButtonSegment(value: 'subtle', label: Text('Suave')),
+                ButtonSegment(value: 'off', label: Text('Sin red')),
+              ],
+              selected: {widget.database.visualEffects},
+              onSelectionChanged: (selection) {
+                widget.database.setVisualEffects(selection.single);
+                setState(() {});
+              },
+            ),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(12, 8, 12, 4),
+              child: Text(
+                'La red es solo una ilustración; no representa cálculos reales. '
+                'Android también puede reducir el movimiento desde sus ajustes de accesibilidad.',
+                style: TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
           if (widget.appUpdateChecker != null) ...[
             Card(
               child: ListTile(

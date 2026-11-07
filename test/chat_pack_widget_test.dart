@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:toxo/data/knowledge_database.dart';
+import 'package:toxo/data/knowledge_package.dart';
 import 'package:toxo/data/offline_pack_manager.dart';
 import 'package:toxo/data/offline_pack_manifest.dart';
 import 'package:toxo/screens/chat_screen.dart';
@@ -37,7 +38,7 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      MaterialApp(home: ChatScreen(database: database, packManager: manager)),
+      _chatApp(database, manager),
     );
     await tester.pumpAndSettle();
 
@@ -68,7 +69,7 @@ void main() {
       updateAvailable: true,
     );
     await tester.pumpWidget(
-      MaterialApp(home: ChatScreen(database: database, packManager: manager)),
+      _chatApp(database, manager),
     );
     await tester.pumpAndSettle();
 
@@ -88,13 +89,163 @@ void main() {
       hasInstalledPackValue: true,
     );
     await tester.pumpWidget(
-      MaterialApp(home: ChatScreen(database: database, packManager: manager)),
+      _chatApp(database, manager),
     );
     await tester.pumpAndSettle();
 
     expect(find.text('Pack offline listo'), findsNothing);
     expect(find.textContaining('Descargar ·'), findsNothing);
   });
+
+  testWidgets('moves offline status into settings and lets users reduce visuals', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _chatApp(database, manager),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Sin conexión ·'), findsNothing);
+    expect(find.byKey(const ValueKey('neural-network-backdrop')), findsOneWidget);
+    expect(
+      tester.widget<Scaffold>(find.byType(Scaffold).first).backgroundColor,
+      const Color(0xFF071622),
+    );
+
+    await tester.tap(find.byTooltip('Preferencias'));
+    await tester.pumpAndSettle();
+    expect(find.text('Modo sin conexión'), findsOneWidget);
+    expect(find.text('Intensidad visual'), findsOneWidget);
+    await tester.tap(find.text('Sin red'));
+    await tester.pumpAndSettle();
+    expect(database.visualEffects, 'off');
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('neural-network-backdrop')), findsNothing);
+
+    await tester.tap(find.byTooltip('Preferencias'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Menta'));
+    await tester.pumpAndSettle();
+    expect(database.appearance, 'mint');
+  });
+
+  testWidgets('casual chat stays out of retrieval when the model is missing', (
+    tester,
+  ) async {
+    database.importPackage(
+      const KnowledgePackage(
+        packageId: 'small-talk-test',
+        sourceTitle: 'Prueba',
+        license: 'CC0-1.0',
+        attribution: 'Toxo',
+        sourceUrl: 'https://example.test/library',
+        articles: [
+          KnowledgeArticle(
+            id: 'charla',
+            title: 'Charla informal',
+            text: 'Una charla puede comenzar al decir que quiero conversar.',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(
+      _chatApp(database, manager),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byType(TextField),
+      'Quisiera charlar un poco',
+    );
+    await tester.tap(find.byTooltip('Enviar'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('podemos charlar'), findsOneWidget);
+    expect(find.text('Charla informal'), findsNothing);
+    expect(find.textContaining('Descarga el modelo local'), findsOneWidget);
+  });
+
+  testWidgets('factual questions show matching local sources without a model', (
+    tester,
+  ) async {
+    database.importPackage(
+      const KnowledgePackage(
+        packageId: 'facts-test',
+        sourceTitle: 'Biblioteca de prueba',
+        license: 'CC0-1.0',
+        attribution: 'Toxo',
+        sourceUrl: 'https://example.test/library',
+        articles: [
+          KnowledgeArticle(
+            id: 'fotosintesis',
+            title: 'Fotosíntesis',
+            text: 'Las plantas usan energía solar durante la fotosíntesis.',
+            sourceTitle: 'Fuente abierta',
+            license: 'CC0-1.0',
+            attribution: 'Equipo Toxo',
+            sourceUrl: 'https://example.test/fotosintesis',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(
+      _chatApp(database, manager),
+    );
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byType(TextField),
+      '¿Qué es la fotosíntesis?',
+    );
+    await tester.tap(find.byTooltip('Enviar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('¡Encontré algo útil en tu biblioteca! Aquí tienes los pasajes más cercanos:'), findsOneWidget);
+    expect(find.text('Fotosíntesis'), findsOneWidget);
+    expect(find.textContaining('Fuente abierta'), findsOneWidget);
+    expect(find.textContaining('podemos charlar'), findsNothing);
+  });
+
+  testWidgets('reduced motion keeps the neural illustration static', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: ChatScreen(database: database, packManager: manager),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final before = tester
+        .widget<CustomPaint>(
+          find.descendant(
+            of: find.byKey(const ValueKey('neural-network-backdrop')),
+            matching: find.byType(CustomPaint),
+          ),
+        )
+        .painter;
+    await tester.pump(const Duration(seconds: 5));
+    final after = tester
+        .widget<CustomPaint>(
+          find.descendant(
+            of: find.byKey(const ValueKey('neural-network-backdrop')),
+            matching: find.byType(CustomPaint),
+          ),
+        )
+        .painter;
+
+    expect(identical(before, after), isTrue);
+  });
+}
+
+Widget _chatApp(KnowledgeDatabase database, OfflinePackManager manager) {
+  return MaterialApp(
+    home: MediaQuery(
+      data: const MediaQueryData(disableAnimations: true),
+      child: ChatScreen(database: database, packManager: manager),
+    ),
+  );
 }
 
 class _FakePackManager implements OfflinePackManager {

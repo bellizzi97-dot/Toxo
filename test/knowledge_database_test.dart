@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:toxo/data/knowledge_database.dart';
@@ -105,6 +107,16 @@ void main() {
         text TEXT NOT NULL
       )
     ''');
+    oldDatabase.execute('''
+      CREATE TABLE preferences (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        memory_enabled INTEGER NOT NULL DEFAULT 0,
+        style TEXT NOT NULL DEFAULT 'cercano'
+      )
+    ''');
+    oldDatabase.execute(
+      "INSERT INTO preferences(id, memory_enabled, style) VALUES (1, 0, 'cercano')",
+    );
     database = KnowledgeDatabase(oldDatabase)..initialize();
     database.importPackage(
       KnowledgePackage(
@@ -128,6 +140,24 @@ void main() {
     );
 
     expect(database.search('unidad básica').single.sourceUrl, contains('oldid=42'));
+    expect(database.appearance, 'neural');
+    expect(database.visualEffects, 'dynamic');
+  });
+
+  test('searches and returns UTF-8 accented content from the bundled library', () {
+    final package = KnowledgePackage.decode(
+      File('assets/packs/toxo-conocimientos-es-v3.json').readAsStringSync(),
+    );
+    database.importPackage(package);
+
+    final result = database
+        .search('átomos químicos')
+        .firstWhere((article) => article.title == 'Átomo');
+
+    expect(result.title, 'Átomo');
+    expect(result.text, contains('químicos'));
+    expect(result.sourceTitle, contains('Wikipedia en español'));
+    expect(result.sourceUrl, contains('oldid='));
   });
 
   test('rejects a conflicting package atomically', () {
