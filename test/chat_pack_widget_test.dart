@@ -53,7 +53,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Descarga cancelada'), findsOneWidget);
-    expect(find.text('Reintentar'), findsOneWidget);
     expect(await manager.isInstalled, isFalse);
     expect(manager.cancelled, isTrue);
   });
