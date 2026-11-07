@@ -119,7 +119,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!mounted) return;
     setState(() {
       _messages.add(_ChatMessage(text: question, isAssistant: false));
-      if (installed) {
+      if (installed && socialReply == null) {
         _messages.add(
           _ChatMessage(
             text: 'Preparando el modelo local…',
@@ -157,7 +157,7 @@ class _ChatScreenState extends State<ChatScreen> {
     widget.database.saveConversationMessage(
       ConversationMessage(isAssistant: false, text: question),
     );
-    if (installed) {
+    if (installed && socialReply == null) {
       final messageIndex = _messages.length - 1;
       final completer = Completer<void>();
       _generationCompletion = completer;

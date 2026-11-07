@@ -84,6 +84,10 @@ void main() {
     );
 
     expect(await checker.check(), isNull);
+    expect(
+      AppUpdateChecker.releasesPageUri,
+      Uri.https('github.com', '/bellizzi97-dot/Toxo/releases'),
+    );
     checker.close();
   });
 

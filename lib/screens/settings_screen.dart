@@ -69,7 +69,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ? 'Toxo ${update.latestVersion} está disponible'
               : 'Toxo está actualizado';
           final details = update == null
-              ? 'No hay una versión publicada en GitHub Releases. Las compilaciones de Actions no son actualizaciones instalables.'
+              ? 'La consulta respondió correctamente, pero este repositorio todavía no tiene una versión oficial publicada. No es un fallo de conexión: las compilaciones de Actions son APK de prueba, no actualizaciones instalables. Cuando se publique una APK firmada como release, aparecerá aquí. Android solo permitirá actualizarla si conserva la misma firma.'
               : available
               ? '${update.releaseName}\n\n${_releaseSummary(update.releaseNotes)}\n\n'
                     'Se abrirá la publicación oficial. Android requiere que confirmes la instalación y que la APK sea compatible y esté firmada con la misma clave que esta app.'
@@ -82,6 +82,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: () => Navigator.pop(context, false),
                 child: const Text('Cerrar'),
               ),
+              if (update == null)
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Ver publicaciones'),
+                ),
               if (available)
                 FilledButton(
                   onPressed: () => Navigator.pop(context, true),
@@ -98,6 +103,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         );
         if (!launched) {
           throw StateError('No se pudo abrir la publicación oficial en GitHub.');
+        }
+      } else if (openRelease == true) {
+        final launched = await launchUrl(
+          AppUpdateChecker.releasesPageUri,
+          mode: LaunchMode.externalApplication,
+        );
+        if (!launched) {
+          throw StateError('No se pudo abrir la página oficial de Releases.');
         }
       }
     } on Object catch (error) {

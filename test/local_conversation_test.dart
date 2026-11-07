@@ -93,6 +93,32 @@ void main() {
       );
     });
 
+    test('answers date, time, jokes, and open-ended chat without retrieval', () {
+      final today = LocalConversation.replyTo(
+        '¿Sabes qué día es hoy?',
+        now: DateTime(2026, 11, 7, 14, 3),
+      );
+      expect(today, contains('sábado, 7 de noviembre de 2026'));
+      expect(
+        LocalConversation.intentFor('¿Sabes qué día es hoy?'),
+        ChatIntent.casual,
+      );
+
+      expect(LocalConversation.replyTo('¿Qué hora es?'), contains('En tu dispositivo son las'));
+      expect(
+        LocalConversation.replyTo('¿Puedes contarme un chiste?'),
+        contains('Techo de menos'),
+      );
+      expect(
+        LocalConversation.replyTo('Cuéntame algo'),
+        contains('Una mini historia'),
+      );
+      expect(
+        LocalConversation.intentFor('¿Puedes contarme un chiste?'),
+        ChatIntent.casual,
+      );
+    });
+
     test('keeps follow-ups conversational unless they ask for information', () {
       expect(
         LocalConversation.intentFor(

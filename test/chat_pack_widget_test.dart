@@ -5,12 +5,16 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:toxo/data/app_update_checker.dart';
 import 'package:toxo/data/knowledge_database.dart';
 import 'package:toxo/data/knowledge_package.dart';
 import 'package:toxo/data/offline_pack_manager.dart';
 import 'package:toxo/data/offline_pack_manifest.dart';
 import 'package:toxo/screens/chat_screen.dart';
+import 'package:toxo/screens/settings_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -292,6 +296,67 @@ void main() {
       findsOneWidget,
     );
     expect(find.textContaining('podemos charlar'), findsNothing);
+  });
+
+  testWidgets('asks for today without retrieval cards', (tester) async {
+    database.importPackage(
+      const KnowledgePackage(
+        packageId: 'date-test',
+        sourceTitle: 'Prueba',
+        license: 'CC0-1.0',
+        attribution: 'Toxo',
+        sourceUrl: 'https://example.test/library',
+        articles: [
+          KnowledgeArticle(
+            id: 'planet',
+            title: 'Planetas',
+            text: 'Los planetas orbitan estrellas.',
+          ),
+        ],
+      ),
+    );
+    await tester.pumpWidget(_chatApp(database, manager));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byType(TextField),
+      '¿Sabes qué día es hoy?',
+    );
+    await tester.tap(find.byTooltip('Enviar'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Planetas'), findsNothing);
+    expect(find.textContaining('Hoy es '), findsOneWidget);
+    expect(find.textContaining('Preparando el modelo local'), findsNothing);
+  });
+
+  testWidgets('explains that no release is published rather than implying error', (
+    tester,
+  ) async {
+    final checker = AppUpdateChecker(
+      client: MockClient((_) async => http.Response('', 404)),
+      currentVersion: () async => '0.1.0',
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        home: SettingsScreen(
+          database: database,
+          appUpdateChecker: checker,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Buscar actualización de Toxo'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sin publicaciones disponibles'), findsOneWidget);
+    expect(
+      find.textContaining('No es un fallo de conexión'),
+      findsOneWidget,
+    );
+    expect(find.text('Ver publicaciones'), findsOneWidget);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    checker.close();
   });
 
   testWidgets('reduced motion keeps the neural illustration static', (

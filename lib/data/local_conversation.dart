@@ -3,9 +3,22 @@ enum ChatIntent { casual, research }
 class LocalConversation {
   const LocalConversation._();
 
-  static String? replyTo(String input) {
+  static String? replyTo(String input, {DateTime? now}) {
     final message = _normalize(input);
     if (message.isEmpty) return null;
+
+    if (_asksForToday(message)) {
+      final date = now ?? DateTime.now();
+      return 'Hoy es ${_weekdays[date.weekday - 1]}, ${date.day} de '
+          '${_months[date.month - 1]} de ${date.year}.';
+    }
+
+    if (_asksForTime(message)) {
+      final date = now ?? DateTime.now();
+      final hour = date.hour.toString().padLeft(2, '0');
+      final minute = date.minute.toString().padLeft(2, '0');
+      return 'En tu dispositivo son las $hour:$minute.';
+    }
 
     if (RegExp(
       r'^(hola|holi|hey|buenas|buenos dias|buenas tardes|buenas noches)( toxo)?$',
@@ -33,6 +46,15 @@ class LocalConversation {
       return 'Soy Toxo, tu compa local. Por ahora busco en los textos guardados en este dispositivo y te muestro sus fuentes. Todavía no tengo un modelo generativo, así que si algo no está en la biblioteca, te lo diré con honestidad.';
     }
 
+    if (_asksForJoke(message)) {
+      return '¿Qué le dijo un techo a otro? Techo de menos. 😄';
+    }
+
+    if (_asksForSomething(message)) {
+      return 'Una mini historia: un caracol llegó tarde a una carrera y dijo: '
+          '«¡Es que venía a toda baba!». 🐌😄';
+    }
+
     return null;
   }
 
@@ -41,6 +63,12 @@ class LocalConversation {
     bool previousTurnWasCasual = false,
   }) {
     final message = _normalize(input);
+    if (_asksForToday(message) ||
+        _asksForTime(message) ||
+        _asksForJoke(message) ||
+        _asksForSomething(message)) {
+      return ChatIntent.casual;
+    }
     if (_isExplicitInformationRequest(message)) return ChatIntent.research;
     if (replyTo(input) != null || _isClearlyConversational(message)) {
       return ChatIntent.casual;
@@ -96,7 +124,7 @@ class LocalConversation {
       r'^(quiero|quisiera|tengo ganas de) (hablar|charlar|conversar|platicar)\b',
       r'^(dime )?(que opinas|que piensas)\b',
       r'^(que haces|que opinas|que piensas|que te parece|que tal|que onda|que pasa|que quieres hacer|como estas|como te va|como vas|como te sientes|como estuvo tu dia|como va tu dia)\b',
-      r'^(cuentame|dime) (algo|un chiste|una historia|algo divertido)\b',
+      r'^(cuentame|dime|puedes contarme|podrias contarme|me puedes contar) (algo|un chiste|una historia|algo divertido)\b',
       r'^(hablemos|charlemos|platiquemos|conversemos)\b',
       r'^(y tu|y a ti|a mi tambien|jaja|jajaja|entiendo|claro|si|no)$',
     ]);
@@ -111,6 +139,46 @@ class LocalConversation {
     ).hasMatch(message);
     return startsWithQuestionWord || asksAboutFact;
   }
+
+  static bool _asksForToday(String message) => RegExp(
+    r'^(sabes )?(que dia es hoy|que fecha es hoy|que dia es|que fecha es|cual es la fecha de hoy)$',
+  ).hasMatch(message);
+
+  static bool _asksForTime(String message) =>
+      RegExp(r'^(sabes )?(que hora es|me dices la hora)$').hasMatch(message);
+
+  static bool _asksForJoke(String message) => RegExp(
+    r'^(puedes |podrias |me puedes )?(contarme |contar |decirme |decir |cuentame |dime )?(un )?chiste$',
+  ).hasMatch(message);
+
+  static bool _asksForSomething(String message) => RegExp(
+    r'^(cuentame|dime|puedes contarme|podrias contarme|me puedes contar) algo$',
+  ).hasMatch(message);
+
+  static const _weekdays = [
+    'lunes',
+    'martes',
+    'miércoles',
+    'jueves',
+    'viernes',
+    'sábado',
+    'domingo',
+  ];
+
+  static const _months = [
+    'enero',
+    'febrero',
+    'marzo',
+    'abril',
+    'mayo',
+    'junio',
+    'julio',
+    'agosto',
+    'septiembre',
+    'octubre',
+    'noviembre',
+    'diciembre',
+  ];
 
   static bool _matches(String message, List<String> patterns) {
     return patterns.any((pattern) => RegExp(pattern).hasMatch(message));

@@ -39,6 +39,11 @@ class AppUpdateChecker {
     '/repos/bellizzi97-dot/Toxo/releases/latest',
   );
 
+  static final releasesPageUri = Uri.https(
+    'github.com',
+    '/bellizzi97-dot/Toxo/releases',
+  );
+
   final http.Client _client;
   final bool _ownsClient;
   final Future<String> Function() _currentVersion;
