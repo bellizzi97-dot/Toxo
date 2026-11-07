@@ -1,0 +1,62 @@
+name: Android test APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - bellizzi97-dot-ia-offline-multiplataforma
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Create Android host project
+        run: flutter create --platforms=android --project-name=toxo --org=app.toxo android-build
+
+      - name: Copy app source into host project
+        run: |
+          cp pubspec.yaml android-build/pubspec.yaml
+          rm -rf android-build/lib android-build/test
+          cp -R lib android-build/lib
+          cp -R test android-build/test
+
+      - name: Resolve dependencies
+        working-directory: android-build
+        run: flutter pub get
+
+      - name: Run tests
+        working-directory: android-build
+        run: flutter test
+
+      - name: Build debug APK
+        working-directory: android-build
+        run: flutter build apk --debug
+
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: toxo-android-debug-apk
+          path: android-build/build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14

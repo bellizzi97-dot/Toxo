@@ -1,0 +1,22 @@
+name: toxo
+description: Asistente local y multiplataforma con conocimiento consultable sin conexión.
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  path: ^1.9.1
+  path_provider: ^2.1.5
+  sqlite3: ^2.7.5
+  sqlite3_flutter_libs: ^0.5.32
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
