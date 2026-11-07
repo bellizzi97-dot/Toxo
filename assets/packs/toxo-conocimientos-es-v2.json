@@ -1,0 +1,372 @@
+{
+    "schemaVersion":  1,
+    "packageId":  "toxo-conocimientos-es-v2",
+    "source":  {
+                   "title":  "Biblioteca abierta en español — fuentes mixtas",
+                   "license":  "CC0-1.0 por artículo (Toxo) y CC BY-SA 4.0 por artículo (Wikipedia)",
+                   "attribution":  "Cada artículo conserva su propia atribución, licencia y URL de fuente.",
+                   "url":  "https://github.com/bellizzi97-dot/Toxo"
+               },
+    "articles":  [
+                     {
+                         "id":  "toxo-pack-fotosintesis",
+                         "title":  "FotosÃ­ntesis",
+                         "text":  "La fotosÃ­ntesis permite que plantas, algas y algunas bacterias usen energÃ­a de la luz para transformar agua y diÃ³xido de carbono en azÃºcares. En las plantas ocurre principalmente en los cloroplastos de las hojas. El proceso tambiÃ©n libera oxÃ­geno y almacena energÃ­a quÃ­mica que alimenta numerosos ecosistemas.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-ciclo-agua",
+                         "title":  "El ciclo del agua",
+                         "text":  "El ciclo del agua describe el movimiento continuo del agua entre ocÃ©anos, atmÃ³sfera y tierra. El calor causa evaporaciÃ³n; al enfriarse el vapor se condensa en nubes y puede caer como precipitaciÃ³n. Parte del agua se infiltra en el suelo y parte fluye por rÃ­os hasta el mar. La energÃ­a solar y la gravedad impulsan distintas etapas.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-ecosistemas",
+                         "title":  "Ecosistemas",
+                         "text":  "Un ecosistema reÃºne los seres vivos de un lugar y los componentes fÃ­sicos con los que interactÃºan, como agua, suelo, aire y luz. Los productores capturan energÃ­a, los consumidores se alimentan de otros organismos y los descomponedores reciclan nutrientes. Las relaciones entre estos elementos hacen que un cambio en una poblaciÃ³n pueda afectar a otras.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-volcanes",
+                         "title":  "Volcanes",
+                         "text":  "Un volcÃ¡n es una abertura de la corteza terrestre por la que pueden salir magma, gases y fragmentos de roca. Cuando el magma alcanza la superficie se llama lava. Muchos volcanes se forman cerca de lÃ­mites de placas tectÃ³nicas o sobre puntos calientes. Las erupciones crean rocas y suelos, pero pueden presentar riesgos para comunidades cercanas.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-luna",
+                         "title":  "La Luna",
+                         "text":  "La Luna es el satÃ©lite natural de la Tierra. La gravedad terrestre la mantiene en Ã³rbita y la gravedad lunar contribuye a las mareas. La Luna no produce luz visible propia: refleja la luz del Sol. Desde la Tierra vemos fases distintas porque cambia la porciÃ³n iluminada que queda orientada hacia nosotros durante su Ã³rbita.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-sistema-solar",
+                         "title":  "Sistema solar",
+                         "text":  "El sistema solar estÃ¡ formado por el Sol y los objetos ligados a su gravedad, entre ellos ocho planetas, lunas, planetas enanos, asteroides y cometas. Mercurio, Venus, la Tierra y Marte son planetas rocosos. JÃºpiter y Saturno son gigantes gaseosos; Urano y Neptuno son gigantes helados. La Tierra completa una Ã³rbita alrededor del Sol aproximadamente cada 365 dÃ­as.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-celula",
+                         "title":  "La cÃ©lula",
+                         "text":  "La cÃ©lula es la unidad bÃ¡sica de los seres vivos. Una membrana separa su interior del entorno y regula el intercambio de sustancias. Las cÃ©lulas pueden contener estructuras con funciones especializadas: en las eucariotas el nÃºcleo guarda la mayor parte del material genÃ©tico, y las mitocondrias participan en la obtenciÃ³n de energÃ­a.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-gravedad",
+                         "title":  "Gravedad",
+                         "text":  "La gravedad es una interacciÃ³n por la que los cuerpos con masa se atraen. En la vida diaria mantiene los objetos cerca de la superficie terrestre y hace que la Luna siga una Ã³rbita alrededor de la Tierra. La intensidad del efecto depende de las masas involucradas y de la distancia entre ellas.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-oceanos",
+                         "title":  "OcÃ©anos",
+                         "text":  "Los ocÃ©anos cubren gran parte de la superficie de la Tierra y conectan regiones del planeta mediante corrientes. Absorben y redistribuyen calor, intervienen en el ciclo del agua y ofrecen hÃ¡bitats a una gran diversidad de organismos. La salinidad, temperatura, profundidad y luz cambian entre zonas y condicionan la vida marina.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-dinosaurios",
+                         "title":  "Dinosaurios",
+                         "text":  "Los dinosaurios fueron un grupo diverso de reptiles que viviÃ³ durante la era Mesozoica. Sus fÃ³siles muestran diferencias de tamaÃ±o, dieta y forma de desplazamiento. Las aves actuales pertenecen al linaje de dinosaurios terÃ³podos. La mayorÃ­a de los dinosaurios no avianos desapareciÃ³ al final del CretÃ¡cico, mientras que las aves sobrevivieron.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-magnetismo",
+                         "title":  "Magnetismo",
+                         "text":  "El magnetismo es un fenÃ³meno asociado al movimiento de cargas elÃ©ctricas y a propiedades magnÃ©ticas de algunos materiales. Un imÃ¡n tiene polos norte y sur; polos iguales se repelen y polos opuestos se atraen. La Tierra tambiÃ©n genera un campo magnÃ©tico que influye en brÃºjulas y ayuda a desviar parte de las partÃ­culas cargadas del viento solar.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-cerebro",
+                         "title":  "El cerebro",
+                         "text":  "El cerebro forma parte del sistema nervioso y procesa informaciÃ³n que llega de los sentidos, participa en el movimiento y coordina funciones del cuerpo. EstÃ¡ compuesto por redes de neuronas y otras cÃ©lulas que se comunican mediante seÃ±ales elÃ©ctricas y quÃ­micas. El aprendizaje implica cambios en la actividad y las conexiones de esas redes.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-rocas",
+                         "title":  "Rocas y minerales",
+                         "text":  "Un mineral es una sustancia natural con composiciÃ³n quÃ­mica y estructura cristalina caracterÃ­sticas. Las rocas son agregados de uno o varios minerales. SegÃºn cÃ³mo se forman, las rocas pueden ser Ã­gneas, sedimentarias o metamÃ³rficas. El ciclo de las rocas describe transformaciones causadas por enfriamiento, erosiÃ³n, presiÃ³n, calor y otros procesos geolÃ³gicos.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-energia",
+                         "title":  "EnergÃ­a",
+                         "text":  "La energÃ­a es una propiedad que permite describir cambios y la capacidad de realizar trabajo. Puede presentarse como movimiento, calor, energÃ­a quÃ­mica, elÃ©ctrica, luminosa o potencial. En muchos procesos la energÃ­a cambia de forma y se transfiere entre objetos; la energÃ­a total de un sistema aislado se conserva.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "toxo-pack-arboles",
+                         "title":  "Ãrboles y bosques",
+                         "text":  "Los Ã¡rboles son plantas leÃ±osas que pueden vivir muchos aÃ±os y crecer formando bosques junto con otras especies. Sus raÃ­ces absorben agua y nutrientes, sus hojas captan luz, y su madera sostiene el tronco y las ramas. Los bosques almacenan carbono, protegen suelos y proporcionan alimento y refugio a numerosos organismos.",
+                         "sourceTitle":  "Conocimientos abiertos en espaÃ±ol para Toxo",
+                         "license":  "CC0-1.0",
+                         "attribution":  "Contenido original escrito para el proyecto Toxo",
+                         "sourceUrl":  "https://github.com/bellizzi97-dot/Toxo"
+                     },
+                     {
+                         "id":  "wikipedia-es-2562",
+                         "title":  "Sistema solar",
+                         "text":  "El sistema solar es el sistema planetario que liga gravitacionalmente a un conjunto de objetos astronÃ³micos que giran directa o indirectamente en una Ã³rbita alrededor de una Ãºnica estrella conocida con el nombre de Sol. La estrella concentra el 99,86 % de la masa del sistema solar, y la mayor parte de la masa restante se concentra en ocho planetas cuyas Ã³rbitas son prÃ¡cticamente circulares y transitan dentro de un disco casi llano llamado plano eclÃ­ptico. Los cuatro planetas mÃ¡s cercanos, considerablemente mÃ¡s pequeÃ±os, Mercurio, Venus, Tierra y Marte, tambiÃ©n conocidos como los planetas terrestres, estÃ¡n compuestos principalmente por roca y metal. Mientras que los cuatro mÃ¡s alejados, denominados gigantes gaseosos o Â«planetas jovianosÂ», mÃ¡s masivos que los terrestres, estÃ¡n compuestos de hielo y gases. Los dos mÃ¡s grandes, JÃºpiter y Saturno, estÃ¡n compuestos principalmente de helioâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Sistema solar",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176104929.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Sistema_solar?oldid=176104929"
+                     },
+                     {
+                         "id":  "wikipedia-es-16208",
+                         "title":  "Biodiversidad",
+                         "text":  "La biodiversidad o diversidad biolÃ³gica es, segÃºn el Convenio Internacional sobre la Diversidad BiolÃ³gica, el tÃ©rmino por el que se hace referencia a la amplia variedad de seres vivos sobre la Tierra y lo que sucede con los patrones naturales que la conforman, resultado de miles de millones de aÃ±os de evoluciÃ³n segÃºn procesos naturales y tambiÃ©n de la influencia creciente de las actividades del ser humano. La biodiversidad comprende igualmente la variedad de ecosistemas y las diferencias genÃ©ticas dentro de cada especie (diversidad genÃ©tica) que permiten la combinaciÃ³n de mÃºltiples formas de vida, y cuyas mutuas interacciones con el resto del entorno fundamentan el sustento de la vida sobre el mundo. El tÃ©rmino Â«biodiversidadÂ» es un calco del inglÃ©s Â«biodiversityÂ». Este tÃ©rmino, a su vez, es la contracciÃ³n de la expresiÃ³n Â«biological diversityÂ» que se utilizÃ³ por primera vez en octubre deâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Biodiversidad",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176171076.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Biodiversidad?oldid=176171076"
+                     },
+                     {
+                         "id":  "wikipedia-es-36694",
+                         "title":  "CÃ©lula",
+                         "text":  "La cÃ©lula (del latÃ­n cellula, diminutivo de cella, â€˜celdaâ€™) es la unidad morfolÃ³gica y fisiolÃ³gica de todos los seres vivos que existen. De hecho, la cÃ©lula es el elemento de menor tamaÃ±o que puede considerarse vivo. De este modo, puede clasificarse a los organismos vivos segÃºn el nÃºmero de cÃ©lulas que posean: si solo tienen una, se les denomina unicelulares (como pueden ser los protozoos o las bacterias, organismos microscÃ³picos); si poseen mÃ¡s, se les llama pluricelulares. En estos Ãºltimos el nÃºmero de cÃ©lulas es variable: de unos pocos cientos, como en algunos nematodos, a cientos de billones (1014), como en el caso del ser humano. Las cÃ©lulas suelen poseer un tamaÃ±o de 10 Âµm y una masa de 1 ng, aunque existen cÃ©lulas mucho mayores. La teorÃ­a celular, propuesta en 1838 para los vegetales y en 1839 para los animales, por Matthias Jakob Schleiden y Theodor Schwann, postula que todosâ€¦",
+                         "sourceTitle":  "Wikipedia en español — CÃ©lula",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176176831.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/C%C3%A9lula?oldid=176176831"
+                     },
+                     {
+                         "id":  "wikipedia-es-38552",
+                         "title":  "VolcÃ¡n",
+                         "text":  "Un volcÃ¡n (del portuguÃ©s vulcÃ£o, y este del latÃ­n VulcÄnus \u0027Vulcano\u0027, dios romano del fuego) es una estructura geolÃ³gica en la tierra o en el mar, generalmente una montaÃ±a, por la que emerge el magma que se divide en lava y gases provenientes del interior de la Tierra. El ascenso del magma ocurre en episodios de actividad violenta denominados erupciones, que pueden variar en intensidad, duraciÃ³n y frecuencia, desde suaves corrientes de lava hasta explosiones extremadamente destructivas. En ocasiones, los volcanes adquieren una forma cÃ³nica por la acumulaciÃ³n de material de erupciones anteriores. En la cumbre se encuentra su crÃ¡ter o caldera. Por lo general los volcanes se forman en los lÃ­mites de las placas tectÃ³nicas, aunque existen los llamados puntos calientes, donde no hay contacto entre placas, como es el caso de las islas HawÃ¡i. Aproximadamente el 75% de los volcanes activos delâ€¦",
+                         "sourceTitle":  "Wikipedia en español — VolcÃ¡n",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 175841461.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Volc%C3%A1n?oldid=175841461"
+                     },
+                     {
+                         "id":  "wikipedia-es-91968",
+                         "title":  "Cambio climÃ¡tico",
+                         "text":  "Un cambio climÃ¡tico se define como la variaciÃ³n en el estado del sistema climÃ¡tico terrestre, formado por la atmÃ³sfera, la hidrosfera, la criosfera, la litosfera y la biosfera, que perdura durante periodos de tiempo suficientemente largos (dÃ©cadas o mÃ¡s tiempo) hasta alcanzar un nuevo equilibrio. Puede afectar tanto a los valores medios meteorolÃ³gicos como a su variabilidad y extremos. Los cambios climÃ¡ticos han existido desde el inicio de la historia de la Tierra, han sido graduales o abruptos y se han debido a causas diversas, como las relacionadas con los cambios en los parÃ¡metros orbitales, variaciones de la radiaciÃ³n solar, la deriva continental, periodos de vulcanismo intenso, procesos biÃ³ticos o impactos de meteoritos. El cambio climÃ¡tico actual es antropogÃ©nico y se relaciona principalmente con la intensificaciÃ³n del efecto invernadero debido a las emisiones industriales procedentesâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Cambio climÃ¡tico",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176149668.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Cambio_clim%C3%A1tico?oldid=176149668"
+                     },
+                     {
+                         "id":  "wikipedia-es-718891",
+                         "title":  "Ecosistema",
+                         "text":  "Un ecosistema es un sistema biolÃ³gico constituido por una comunidad de organismos vivos (biocenosis) y el medio fÃ­sico donde se relacionan (biotopo). Se trata de una unidad compuesta de organismos interdependientes que comparten el mismo hÃ¡bitat. Los ecosistemas suelen formar una serie de cadenas que muestran la interdependencia de los organismos dentro del sistema. TambiÃ©n se puede definir asÃ­: Â«Un ecosistema consiste de la comunidad biolÃ³gica de un lugar y de los factores fÃ­sicos y quÃ­micos que constituyen el ambiente abiÃ³ticoÂ». Se considera que los factores abiÃ³ticos y biÃ³ticos estÃ¡n ligados por las cadenas trÃ³ficas o sea el flujo de energÃ­a y nutrientes en los ecosistemas. Este concepto, que fue introducido en 1935 por el ecÃ³logo inglÃ©s A. G. Tansley, tiene en cuenta las complejas interacciones entre los organismos (por ejemplo plantas, animales, bacterias, protistas y hongosâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Ecosistema",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 175913341.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Ecosistema?oldid=175913341"
+                     },
+                     {
+                         "id":  "wikipedia-es-1230585",
+                         "title":  "Gravedad",
+                         "text":  "La gravedad es un fenÃ³meno natural por el cual los objetos y campos de materia dotados de masa o energÃ­a son atraÃ­dos entre sÃ­, efecto mayormente observable en la interacciÃ³n entre los planetas, galaxias y demÃ¡s objetos del universo. Es una distorsiÃ³n del espacio-tiempo y es una de las cuatro interacciones fundamentales que origina la fuerza que experimenta un cuerpo fÃ­sico en las cercanÃ­as de un objeto astronÃ³mico y la primera de estas en ser estudiada. TambiÃ©n se denomina interacciÃ³n gravitatoria o gravitaciÃ³n. HistÃ³ricamente se la ha llamado tambiÃ©n fuerza de gravedad. En el estudio de la gravedad han realizado aportes significativos: AristÃ³teles planteando esta fuerza en su obra FÃ­sica, Newton con su ley de gravitaciÃ³n universal y Einstein con su relatividad general. En la actualidad, no ha podido ser descrita aÃºn por la mecÃ¡nica cuÃ¡ntica ni por la teorÃ­a cuÃ¡ntica de campos. Si un cuerpoâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Gravedad",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 175491070.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Gravedad?oldid=175491070"
+                     },
+                     {
+                         "id":  "wikipedia-es-2482150",
+                         "title":  "EnergÃ­a",
+                         "text":  "El tÃ©rmino energÃ­a (del griego á¼Î½Î­ÏÎ³ÎµÎ¹Î± enÃ©rgeia, â€˜actividadâ€™; de á¼Î½ÎµÏÎ³Ã³Ï‚ energÃ³s, â€˜fuerza de acciÃ³nâ€™ o â€˜fuerza de trabajoâ€™) tiene diversas acepciones y definiciones, relacionadas con la idea de una capacidad para obrar, surgir, transformar o poner en movimiento. En fÃ­sica (especÃ­ficamente en mecÃ¡nica), energÃ­a se define como la capacidad para realizar un trabajo. En tecnologÃ­a y economÃ­a, Â«energÃ­aÂ» se refiere a un recurso natural (incluyendo a su tecnologÃ­a asociada para poder extraerla, transformarla y darle un uso industrial o econÃ³mico). La naturaleza es esencialmente dinÃ¡mica, es decir, estÃ¡ sometida a continuos cambios: posiciÃ³n, velocidad, estado fÃ­sico...etc. Existe algo comÃºn a todos los cambios materiales y que indefectiblemente los acompaÃ±a: la energÃ­a. La energÃ­a es una propiedad o atributo de los cuerpos o sistemas materiales en virtud de la cual Ã©stos pueden transformarse,â€¦",
+                         "sourceTitle":  "Wikipedia en español — EnergÃ­a",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 175708372.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Energ%C3%ADa?oldid=175708372"
+                     },
+                     {
+                         "id":  "wikipedia-es-187",
+                         "title":  "Algoritmo",
+                         "text":  "En matemÃ¡ticas, lÃ³gica, ciencias de la computaciÃ³n y disciplinas relacionadas, un algoritmo es un conjunto finito y ordenado de instrucciones o reglas precisas y no ambiguas que, aplicadas de manera lÃ³gica, permiten resolver un problema, realizar un cÃ¡lculo, procesar datos o ejecutar diversas tareas. Partiendo de un estado inicial y una entrada determinada, la aplicaciÃ³n de los pasos sucesivos de un algoritmo conduce a un estado final que proporciona una soluciÃ³n al problema planteado. El estudio de los algoritmos constituye el objeto central de la algoritmia. En la vida cotidiana, se emplean algoritmos frecuentemente para resolver problemas determinados. Algunos ejemplos son los manuales de usuario, que muestran algoritmos para usar un aparato, o las instrucciones que recibe un trabajador de su patrÃ³n. Algunos ejemplos en matemÃ¡tica son el algoritmo de multiplicaciÃ³n, para calcular elâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Algoritmo",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176161986.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Algoritmo?oldid=176161986"
+                     },
+                     {
+                         "id":  "wikipedia-es-1003",
+                         "title":  "Electricidad",
+                         "text":  "La electricidad (del griego Î®Î»ÎµÎºÏ„ÏÎ¿Î½ Ã©lektron, cuyo significado es â€˜Ã¡mbarâ€™) es el conjunto de fenÃ³menos fÃ­sicos relacionados con la presencia y el flujo de cargas elÃ©ctricas. Se manifiesta en una gran variedad de fenÃ³menos como los rayos, la electricidad estÃ¡tica, la inducciÃ³n electromagnÃ©tica y el flujo de corriente elÃ©ctrica. Es una forma de energÃ­a tan versÃ¡til que tiene un sinnÃºmero de aplicaciones, como por ejemplo: transporte, climatizaciÃ³n, iluminaciÃ³n e informÃ¡tica. La electricidad se manifiesta mediante varios fenÃ³menos y propiedades fÃ­sicas: Carga elÃ©ctrica: una propiedad de algunas partÃ­culas subatÃ³micas que determina su interacciÃ³n electromagnÃ©tica. La materia elÃ©ctricamente cargada produce y es influida por los campos electromagnÃ©ticos. Corriente elÃ©ctrica: el flujo de electrones que circula por un conductor en un determinado momento. Se mide en amperios. Campo elÃ©ctrico:â€¦",
+                         "sourceTitle":  "Wikipedia en español — Electricidad",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176094663.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Electricidad?oldid=176094663"
+                     },
+                     {
+                         "id":  "wikipedia-es-1239",
+                         "title":  "GeometrÃ­a",
+                         "text":  "La geometrÃ­a (del latÃ­n geometrÄ­a, y este del griego Î³ÎµÏ‰Î¼ÎµÏ„ÏÎ¯Î± de Î³á¿† gÄ“, â€˜tierraâ€™, y Î¼ÎµÏ„ÏÎ¯Î± metrÃ­a, â€˜medidaâ€™) es una rama de las matemÃ¡ticas que se ocupa del estudio de las propiedades de las figuras en el plano o el espacio, incluyendo: puntos, rectas, planos, politopos (como paralelas, perpendiculares, curvas, superficies, polÃ­gonos, poliedros, etc.). Es la base teÃ³rica de la geometrÃ­a descriptiva o del dibujo tÃ©cnico. TambiÃ©n da fundamento a instrumentos como el compÃ¡s, el teodolito, el pantÃ³grafo o el sistema de posicionamiento global (en especial cuando se la considera en combinaciÃ³n con el anÃ¡lisis matemÃ¡tico y sobre todo con las ecuaciones diferenciales). Sus orÃ­genes se remontan a la soluciÃ³n de problemas concretos relativos a medidas. Tiene su aplicaciÃ³n prÃ¡ctica en fÃ­sica aplicada, mecÃ¡nica, arquitectura, geografÃ­a, cartografÃ­a, astronomÃ­a, nÃ¡utica, topografÃ­a, balÃ­stica, , y esâ€¦",
+                         "sourceTitle":  "Wikipedia en español — GeometrÃ­a",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176182021.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Geometr%C3%ADa?oldid=176182021"
+                     },
+                     {
+                         "id":  "wikipedia-es-1763",
+                         "title":  "MatemÃ¡ticas",
+                         "text":  "Las matemÃ¡ticas o, tambiÃ©n, la matemÃ¡tica (del latÃ­n mathematÄ­ca, y a la vez del griego Î¼Î±Î¸Î·Î¼Î±Ï„Î¹ÎºÎ¬, transliterado como mathÄ“matikÃ¡, derivado de Î¼Î¬Î¸Î·Î¼Î±, tr. mÃ¡thÄ“ma â€˜lo que se comprendeâ€™) es una ciencia formal que estudia los patrones, propiedades, estructuras y relaciones presentes en sistemas lÃ³gicos y abstractos creados por los humanos. Conceptos tales como cantidad, forma, espacio y nÃºmero se podrÃ­an considerar como el objeto de estudio de la matemÃ¡tica.",
+                         "sourceTitle":  "Wikipedia en español — MatemÃ¡ticas",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176064850.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Matem%C3%A1ticas?oldid=176064850"
+                     },
+                     {
+                         "id":  "wikipedia-es-157881",
+                         "title":  "Ãtomo",
+                         "text":  "El Ã¡tomo es la unidad fundamental de los elementos quÃ­micos. Los Ã¡tomos son microscÃ³picos; los tamaÃ±os tÃ­picos son alrededor de 100 pm (diez mil millonÃ©sima parte de un metro). No obstante, los Ã¡tomos no tienen lÃ­mites bien definidos y hay diferentes formas de definir su tamaÃ±o que dan valores diferentes pero cercanos. Los Ã¡tomos son lo suficientemente pequeÃ±os para que la fÃ­sica clÃ¡sica dÃ© resultados notablemente incorrectos. El tÃ©rmino proviene del latÃ­n atÅmus, calco del griego á¼„Ï„Î¿Î¼Î¿Î½ (Ã¡tomon) á¼„Ï„Î¿Î¼Î¿Ï‚, uniÃ³n de Î± (a, que significa Â«sinÂ»), y Ï„ÏŒÎ¼Î¿Ï‚ (tÃ³mos, Â«secciÃ³nÂ»), que literalmente es Â«que no se puede cortar, indivisibleÂ», y fue el nombre que le dio DemÃ³crito de Abdera, asÃ­ como su maestro Leucipo de Mileto, a los elementos que constituirÃ­an los principios (solo accesibles mediante la razÃ³n) indivisibles del cosmos a partir de los cuales, y mediante el torbellino provocado por susâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Ãtomo",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176069134.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/%C3%81tomo?oldid=176069134"
+                     },
+                     {
+                         "id":  "wikipedia-es-326030",
+                         "title":  "Probabilidad",
+                         "text":  "La probabilidad es una medida de la certidumbre de que ocurra un evento. Su valor es un nÃºmero entre 0 y 1, donde un evento imposible corresponde a cero y uno seguro corresponde a uno. Una forma empÃ­rica de estimar la probabilidad consiste en obtener la frecuencia con la que sucede un determinado acontecimiento mediante la repeticiÃ³n de experimentos aleatorios, bajo condiciones suficientemente estables. En algunos experimentos de los que se conocen todos los resultados posibles, las probabilidades de estos sucesos pueden ser calculadas de manera teÃ³rica, especialmente cuando todos los resultados son igualmente probables. La teorÃ­a de la probabilidad es la rama de la matemÃ¡tica que estudia los experimentos o fenÃ³menos aleatorios. Se usa extensamente en Ã¡reas como la estadÃ­stica, la fÃ­sica, la economÃ­a (ciencia econÃ³mica), las finanzas, la ciencia de datos, la InvestigaciÃ³n mÃ©dica, en medianoâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Probabilidad",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 174583631.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Probabilidad?oldid=174583631"
+                     },
+                     {
+                         "id":  "wikipedia-es-978425",
+                         "title":  "Magnetismo",
+                         "text":  "El magnetismo es el conjunto de fenÃ³menos fÃ­sicos mediados por campos magnÃ©ticos. Estos pueden ser generados por las corrientes elÃ©ctricas o por los momentos magnÃ©ticos intrÃ­nsecos de las partÃ­culas constituyentes de los materiales. Es parte de un fenÃ³meno mÃ¡s general: el electromagnetismo. TambiÃ©n denomina a la rama de la fÃ­sica que estudia dichos fenÃ³menos. El nÃ­quel, el hierro, el cobalto y sus aleaciones se encuentran entre algunos de los materiales que presentan propiedades magnÃ©ticas fÃ¡cilmente observables, y comÃºnmente se llaman imanes. Estos materiales son ferromagnÃ©ticos e interactÃºan fuertemente con los campos magnÃ©ticos externos a la vez que generan un campo magnÃ©tico propio. Esto permite la conocida repulsiÃ³n y atracciÃ³n entre los polos de los imanes. Sin embargo, todos los materiales son influidos, en mayor o menor medida, por la presencia de un campo magnÃ©tico.",
+                         "sourceTitle":  "Wikipedia en español — Magnetismo",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 175602460.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Magnetismo?oldid=175602460"
+                     },
+                     {
+                         "id":  "wikipedia-es-4507055",
+                         "title":  "Internet",
+                         "text":  "Internet es un conjunto descentralizado de redes de comunicaciones interconectadas, que utilizan la familia de protocolos TCP/IP, lo cual garantiza que las redes fÃ­sicas heterogÃ©neas que la componen constituyen una red lÃ³gica Ãºnica de alcance mundial. Sus orÃ­genes se remontan a 1969, cuando se estableciÃ³ la primera conexiÃ³n de ordenadores, conocida como ARPANET, entre tres universidades de California (Estados Unidos). Uno de los servicios que mÃ¡s Ã©xito ha tenido en internet ha sido la World Wide Web (WWW o la Web), hasta tal punto que es habitual la confusiÃ³n entre ambos tÃ©rminos. La WWW es un conjunto de protocolos que permite, de forma sencilla, la consulta remota de archivos de hipertexto. Este fue un desarrollo posterior (1990) y utiliza internet como medio de transmisiÃ³n. Existen, por tanto, muchos otros servicios y protocolos en internet, aparte de la Web: el envÃ­o de correo electrÃ³nicoâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Internet",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176062732.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Internet?oldid=176062732"
+                     },
+                     {
+                         "id":  "wikipedia-es-1503",
+                         "title":  "Inteligencia artificial",
+                         "text":  "La inteligencia artificial, abreviada como IA o AI (por su nombre en inglÃ©s: artificial intelligence), en el contexto de las ciencias de la computaciÃ³n, es una disciplina y un conjunto de capacidades cognoscitivas e intelectuales expresadas por sistemas informÃ¡ticos o combinaciones de algoritmos cuyo propÃ³sito es la creaciÃ³n de mÃ¡quinas que imiten la inteligencia humana. Estas tecnologÃ­as permiten que las mÃ¡quinas aprendan de la experiencia, se adapten a nuevas entradas y realicen tareas humanas como el reconocimiento de voz, la toma de decisiones, la traducciÃ³n de idiomas o la visiÃ³n por computadora. En el Ã¡mbito educativo y de la salud pÃºblica, la inteligencia artificial ha comenzado a emplearse para potenciar la promociÃ³n de hÃ¡bitos de vida saludable. Mediante el uso de algoritmos de aprendizaje automÃ¡tico y sistemas adaptativos, es posible personalizar metas de actividad fÃ­sica, realizarâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Inteligencia artificial",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176173337.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Inteligencia_artificial?oldid=176173337"
+                     },
+                     {
+                         "id":  "wikipedia-es-2141",
+                         "title":  "Planeta",
+                         "text":  "Un planeta es un objeto astronÃ³mico que orbita una estrella y que es lo suficientemente masivo como para ser redondeado por su propia gravedad, pero no lo suficientemente masivo como para causar fusiÃ³n termonuclear, y que ha despejado su regiÃ³n vecina de planetesimales.",
+                         "sourceTitle":  "Wikipedia en español — Planeta",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176133196.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Planeta?oldid=176133196"
+                     },
+                     {
+                         "id":  "wikipedia-es-2681",
+                         "title":  "Sistema nervioso",
+                         "text":  "El sistema nervioso es un conjunto de cÃ©lulas especializadas en la conducciÃ³n de seÃ±ales elÃ©ctricas, estÃ¡ formado por neuronas y cÃ©lulas gliales. Las neuronas reciben, procesan y transmiten la informaciÃ³n que de esta forma puede viajar de un lugar a otro del organismo. La mayor parte de los animales pluricelulares tienen sistemas nerviosos con funciones bÃ¡sicas similares, aunque con un grado de complejidad muy variable. Ãšnicamente carecen de Ã©l los animales que no tienen tejidos y Ã³rganos bien diferenciados, como los porÃ­feros (esponjas), placozoos y mesozoos. El sistema nervioso capta estÃ­mulos del entorno (estÃ­mulos externos), o seÃ±ales del mismo organismo (estÃ­mulos internos), procesa la informaciÃ³n y genera respuestas diferentes segÃºn la situaciÃ³n. A modo de ejemplo podemos considerar un animal que a travÃ©s de las cÃ©lulas sensibles a la luz de la retina capta la proximidad deâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Sistema nervioso",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 175001797.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Sistema_nervioso?oldid=175001797"
+                     },
+                     {
+                         "id":  "wikipedia-es-6852",
+                         "title":  "OcÃ©ano",
+                         "text":  "El ocÃ©ano es una gran masa de agua que constituye una parte importante de la hidrÃ³sfera de un cuerpo celeste. En la Tierra un ocÃ©ano es una de las principales divisiones convencionales del ocÃ©ano mundial, y Â«separa dos o mÃ¡s continentesÂ». Los ocÃ©anos ocupan la mayor parte de la superficie del planeta. El agua de mar cubre aproximadamente 361 000 000 kmÂ² y se suele dividir en varios ocÃ©anos principales y mares mÃ¡s pequeÃ±os; el ocÃ©ano en su conjunto cubre aproximadamente el 71 % de la superficie de la Tierra y el 90 % de la biosfera. El ocÃ©ano mundial contiene el 97 % del agua de la Tierra, y los oceanÃ³grafos han afirmado que se ha cartografiado menos del 20 % de los ocÃ©anos y menos del 10 % con mÃ©todos de sÃ³nar modernos . El volumen total es de aproximadamente 1350 millones de kilÃ³metros cÃºbicos, con una profundidad media de casi 3700 m. Dado que el ocÃ©ano mundial es el principal componenteâ€¦",
+                         "sourceTitle":  "Wikipedia en español — OcÃ©ano",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 175947684.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Oc%C3%A9ano?oldid=175947684"
+                     },
+                     {
+                         "id":  "wikipedia-es-7262",
+                         "title":  "Clima",
+                         "text":  "El clima se define como las condiciones meteorolÃ³gicas medias que caracterizan a un lugar determinado. Es una sÃ­ntesis del tiempo atmosfÃ©rico, obtenida a partir de estadÃ­sticas a largo plazo. Los elementos meteorolÃ³gicos a tomar en cuenta son la temperatura, la presiÃ³n, el viento, la humedad y la precipitaciÃ³n. El clima difiere del tiempo meteorolÃ³gico en que la meteorologÃ­a solo describe las condiciones de corto plazo de estas variables en una regiÃ³n dada. AsÃ­, el clima de un lugar o una regiÃ³n estÃ¡ constituido por los datos estadÃ­sticos de la meteorologÃ­a de dicho lugar o regiÃ³n analizados a lo largo de un plazo relativamente largo, de 30 aÃ±os o mÃ¡s, como seÃ±ala F. J. Monkhouse (1978). Los componentes meteorolÃ³gicos que suelen tomarse como elementos climÃ¡ticos son cinco, como ya se ha indicado arriba. El clima de una ubicaciÃ³n estÃ¡ afectado por su latitud, altitud, orientaciÃ³n delâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Clima",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 175379677.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Clima?oldid=175379677"
+                     },
+                     {
+                         "id":  "wikipedia-es-39087",
+                         "title":  "Vacuna",
+                         "text":  "Una vacuna es una preparaciÃ³n destinada a generar inmunidad adquirida contra una enfermedad, mediante la estimulaciÃ³n de la producciÃ³n de anticuerpos o linfocitos T. Normalmente una vacuna contiene un agente que se asemeja al microorganismo causante de la patologÃ­a y a menudo se hace a partir de formas debilitadas o muertas del microbio, sus toxinas o una de sus proteÃ­nas de superficie. El agente estimula el sistema inmunolÃ³gico del cuerpo a reconocer al agente como una amenaza, destruirla y guardar un registro de este, de modo que el sistema inmune puede reconocer y destruir mÃ¡s fÃ¡cilmente cualquiera de estos microorganismos que encuentre mÃ¡s adelante. La administraciÃ³n de una vacuna se llama vacunaciÃ³n. La efectividad de las vacunaciones ha sido ampliamente estudiada y confirmada; por ejemplo, la vacuna contra la gripe, la vacuna contra el VPH y la vacuna contra la varicela. La vacunaciÃ³nâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Vacuna",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 174693757.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Vacuna?oldid=174693757"
+                     },
+                     {
+                         "id":  "wikipedia-es-44067",
+                         "title":  "DigestiÃ³n",
+                         "text":  "La digestiÃ³n es el proceso de transformaciÃ³n por hidrÃ³lisis de los alimentos en molÃ©culas suficientemente pequeÃ±as (nutrientes) para que atraviesen la membrana plasmÃ¡tica por vÃ­a mecÃ¡nica o quÃ­mica. El aparato digestivo es muy importante en la digestiÃ³n, ya que los organismos heterÃ³trofos dependen de fuentes externas de materias primas y energÃ­a para crecimiento, mantenimiento y funcionamiento. El alimento se emplea para generar y reparar tejidos y obtenciÃ³n de energÃ­a. Los organismos autÃ³trofos (las plantas, organismos fotosintÃ©ticos), por el contrario, captan la energÃ­a lumÃ­nica y la transforman en energÃ­a quÃ­mica, utilizable por los animales. En cada paso de la conversiÃ³n energÃ©tica de un nivel a otro hay una pÃ©rdida de materia y energÃ­a utilizable asociada al mantenimiento de tejidos y tambiÃ©n a la degradaciÃ³n del alimento en partÃ­culas mÃ¡s pequeÃ±as, que despuÃ©s se reconstituirÃ¡n enâ€¦",
+                         "sourceTitle":  "Wikipedia en español — DigestiÃ³n",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 175946311.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Digesti%C3%B3n?oldid=175946311"
+                     },
+                     {
+                         "id":  "wikipedia-es-2444645",
+                         "title":  "Agua",
+                         "text":  "El agua (del latÃ­n aqua) es un compuesto inorgÃ¡nico cuya molÃ©cula estÃ¡ constituida por dos Ã¡tomos de hidrÃ³geno y uno de oxÃ­geno (H2O) unidos por un enlace covalente. El tÃ©rmino agua, generalmente, se refiere a la sustancia en su estado lÃ­quido, aunque esta puede hallarse en su forma sÃ³lida, llamada hielo, y en su forma gaseosa, denominada vapor. Es una sustancia bastante comÃºn en la Tierra y el sistema solar, donde se encuentra principalmente en forma de vapor o de hielo. Es indispensable para el origen y sustento de la vida. El agua cubre el 71 % de la superficie de la corteza terrestre. Se localiza principalmente en los ocÃ©anos, donde se concentra el 96,5 % del total. A los glaciares y casquetes polares les corresponde el 1,74 %, mientras que los depÃ³sitos subterrÃ¡neos (acuÃ­feros), los permafrost y los glaciares continentales concentran el 1,72 %. El restante 0,04 % es el agua dulceâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Agua",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 176177128.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Agua?oldid=176177128"
+                     },
+                     {
+                         "id":  "wikipedia-es-5189863",
+                         "title":  "Luna",
+                         "text":  "La Luna es el Ãºnico satÃ©lite natural de la Tierra. Con un diÃ¡metro ecuatorial de 3474,8 km, es el quinto satÃ©lite mÃ¡s grande del sistema solar, mientras que en cuanto al tamaÃ±o proporcional respecto a su planeta es el satÃ©lite mÃ¡s grande: un cuarto del diÃ¡metro de la Tierra y 1/81 de su masa. Es, ademÃ¡s, despuÃ©s de Ão, el segundo satÃ©lite mÃ¡s denso. Se encuentra en rotaciÃ³n sÃ­ncrona con la Tierra, por lo que siempre muestra la misma cara hacia el planeta. El hemisferio visible estÃ¡ marcado con oscuros mares lunares de origen volcÃ¡nico entre las brillantes montaÃ±as antiguas y los destacados astroblemas. A pesar de ser, en apariencia, el astro mÃ¡s brillante en el cielo terrestre despuÃ©s del Sol, su superficie es en realidad muy oscura, con una reflexiÃ³n similar a la del carbÃ³n. Su prominencia en el cielo y su ciclo regular de fases han hecho de la Luna un elemento con importante influenciaâ€¦",
+                         "sourceTitle":  "Wikipedia en español — Luna",
+                         "license":  "CC BY-SA 4.0",
+                         "attribution":  "Wikipedia contributors; revision 175705929.",
+                         "sourceUrl":  "https://es.wikipedia.org/wiki/Luna?oldid=175705929"
+                     }
+                 ]
+}
