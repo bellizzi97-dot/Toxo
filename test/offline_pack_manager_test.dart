@@ -115,7 +115,10 @@ void main() {
         isA<FormatException>().having(
           (error) => error.message,
           'message',
-          contains('se esperaban ${knowledge.length} bytes'),
+          contains(
+            'se recibieron ${knowledge.length - 1} bytes y se esperaban '
+            '${knowledge.length}.',
+          ),
         ),
       ),
     );
