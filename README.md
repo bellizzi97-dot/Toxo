@@ -43,6 +43,36 @@ El workflow **Android test APK** ejecuta las pruebas, prepara y verifica el AAR 
 
 Cuando una ejecución termine correctamente, descarga `toxo-android-debug-apk` desde los detalles del workflow y extrae `app-debug.apk`. Es una APK de prueba/debug, no una publicación de Play Store. Las búsquedas, conversaciones locales y preferencias no necesitan iniciar sesión.
 
+## Firma y publicación de versiones Android
+
+Un **release** es una publicación versionada de GitHub (normalmente asociada a un tag como `v1.2.3`) que puede incluir archivos descargables y notas de versión. Un artefacto de Actions es temporal y sirve para pruebas; no es una publicación oficial. Hasta que se publique una release con una APK compatible, el comprobador de versiones no tendrá una actualización instalable que anunciar.
+
+El workflow **Android signed release** construye una APK arm64 firmada y la adjunta a un GitHub Release al subir un tag `vX.Y.Z`; también puede ejecutarse manualmente seleccionando ese tag. Requiere que el propietario del repositorio configure estos cuatro secretos en **Settings → Secrets and variables → Actions**:
+
+- `ANDROID_KEYSTORE_BASE64`: contenido del keystore JKS codificado en Base64.
+- `ANDROID_KEYSTORE_PASSWORD`: contraseña del keystore.
+- `ANDROID_KEY_ALIAS`: alias de la clave de firma.
+- `ANDROID_KEY_PASSWORD`: contraseña de la clave.
+
+Genera tu propio keystore localmente con un JDK instalado. El comando pide los datos y contraseñas de forma interactiva; guarda el archivo en un lugar privado y con respaldo:
+
+```powershell
+keytool -genkeypair -v -keystore toxo-upload-key.jks -storetype JKS -alias toxo-upload -keyalg RSA -keysize 2048 -validity 10000
+```
+
+En Windows, obtén el valor Base64 para cargarlo directamente como el secreto `ANDROID_KEYSTORE_BASE64`:
+
+```powershell
+$keystorePath = Join-Path $PWD "toxo-upload-key.jks"
+[Convert]::ToBase64String([IO.File]::ReadAllBytes($keystorePath))
+```
+
+Crea los otros tres secretos usando exactamente las contraseñas y el alias elegidos al generar la clave. Nunca subas el keystore al repositorio, no lo adjuntes a issues o chats y no guardes sus contraseñas en archivos versionados. El workflow falla antes de construir o publicar si falta cualquier secreto, valida la firma con `apksigner` y verifica que el ID de paquete siga siendo `app.toxo.toxo`.
+
+La firma es la identidad criptográfica de la app: la APK se firma con una clave privada RSA guardada en ese keystore, y Android comprueba la firma/certificado al instalarla. No se debe cambiar ni perder el keystore para futuras versiones: Android rechazará como actualización una APK firmada con otra clave. En ese caso, el usuario tendría que desinstalar la app anterior antes de instalar la nueva y podría perder los datos locales. Configura y respalda el keystore antes de crear la primera release.
+
+Después de guardar los cuatro secretos, crea y sube un tag de versión `vX.Y.Z` para iniciar la publicación. No se genera una clave ni se publica una versión automáticamente al integrar cambios en `main`.
+
 ## Paquetes de conocimiento importables
 
 Además del pack inicial, se puede pegar JSON desde **Importar**. Cada paquete requiere esquema 1, fuente, licencia, atribución, URL HTTPS y entre 1 y 10 000 artículos (máximo 10 MB):
