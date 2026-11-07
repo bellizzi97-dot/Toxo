@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -77,6 +78,55 @@ void main() {
     client.close();
   });
 
+  test('verifies streamed bytes when a redirect reports a misleading length', () async {
+    final model = utf8.encode('small model fixture');
+    final knowledge = utf8.encode(_knowledgeJson);
+    final client = _MisreportedLengthClient(model, knowledge);
+    final manager = OfflinePackManager(
+      manifest: _manifest(model, knowledge),
+      database: database,
+      supportDirectory: supportDirectory,
+      client: client,
+    );
+
+    await manager.downloadAndInstall(onProgress: (_) {});
+
+    expect(await manager.isInstalled, isTrue);
+    expect(await manager.modelFile.readAsBytes(), model);
+    expect(database.search('fotosíntesis'), hasLength(1));
+    client.close();
+  });
+
+  test('reports actual versus expected bytes when a stream is truncated', () async {
+    final model = utf8.encode('small model fixture');
+    final knowledge = utf8.encode(_knowledgeJson);
+    final client = _TruncatedKnowledgeClient(model, knowledge);
+    final manager = OfflinePackManager(
+      manifest: _manifest(model, knowledge),
+      database: database,
+      supportDirectory: supportDirectory,
+      client: client,
+    );
+    final progress = <PackProgress>[];
+
+    await expectLater(
+      manager.downloadAndInstall(onProgress: progress.add),
+      throwsA(
+        isA<FormatException>().having(
+          (error) => error.message,
+          'message',
+          contains('se esperaban ${knowledge.length} bytes'),
+        ),
+      ),
+    );
+
+    expect(progress.last.stage, PackInstallStage.failed);
+    expect(progress.last.message, contains('se recibieron'));
+    expect(await manager.isInstalled, isFalse);
+    expect(database.articleCount, 0);
+    client.close();
+  });
+
   test('cancels the download and permits a clean retry', () async {
     final model = utf8.encode('small model fixture');
     final knowledge = utf8.encode(_knowledgeJson);
@@ -129,6 +179,38 @@ void main() {
       throwsFormatException,
     );
   });
+}
+
+class _MisreportedLengthClient extends http.BaseClient {
+  _MisreportedLengthClient(this.model, this.knowledge);
+
+  final List<int> model;
+  final List<int> knowledge;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    final isKnowledge = request.url.path.endsWith('library.json');
+    final bytes = isKnowledge ? knowledge : model;
+    return http.StreamedResponse(
+      Stream.value(bytes),
+      200,
+      contentLength: bytes.length + 37,
+    );
+  }
+}
+
+class _TruncatedKnowledgeClient extends http.BaseClient {
+  _TruncatedKnowledgeClient(this.model, this.knowledge);
+
+  final List<int> model;
+  final List<int> knowledge;
+
+  @override
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    final isKnowledge = request.url.path.endsWith('library.json');
+    final bytes = isKnowledge ? knowledge.sublist(0, knowledge.length - 1) : model;
+    return http.StreamedResponse(Stream.value(bytes), 200);
+  }
 }
 
 MockClient _clientFor(List<int> model, List<int> knowledge) {

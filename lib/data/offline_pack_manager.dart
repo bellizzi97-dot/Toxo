@@ -290,12 +290,6 @@ class OfflinePackManager {
         uri: asset.url,
       );
     }
-    if (response.contentLength != null &&
-        response.contentLength != asset.sizeBytes) {
-      await response.stream.drain<void>();
-      throw const FormatException('El tamaño anunciado no coincide con el pack.');
-    }
-
     var received = 0;
     final sink = destination.openWrite();
     try {
@@ -325,19 +319,26 @@ class OfflinePackManager {
       await sink.close();
     }
     if (received != asset.sizeBytes) {
-      throw const FormatException('La descarga quedó incompleta.');
+      throw FormatException(
+        'La descarga de "${asset.fileName}" quedó incompleta: '
+        'se recibieron $received bytes y se esperaban ${asset.sizeBytes}.',
+      );
     }
   }
 
   Future<void> _verifyAsset(PackAsset asset, File file) async {
     final actualSize = await file.length();
     if (actualSize != asset.sizeBytes) {
-      throw const FormatException('El tamaño del archivo no coincide.');
+      throw FormatException(
+        'El archivo "${asset.fileName}" tiene $actualSize bytes; '
+        'se esperaban ${asset.sizeBytes}.',
+      );
     }
     final digest = await sha256.bind(file.openRead()).first;
     if (digest.toString() != asset.sha256) {
-      throw const FormatException(
-        'La comprobación SHA-256 falló; el archivo se descartó.',
+      throw FormatException(
+        'La comprobación SHA-256 de "${asset.fileName}" falló '
+        '(esperado ${asset.sha256}, recibido $digest); se descartó el archivo.',
       );
     }
   }
