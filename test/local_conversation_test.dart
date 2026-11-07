@@ -4,12 +4,16 @@ import 'package:toxo/data/local_conversation.dart';
 void main() {
   group('LocalConversation', () {
     test('answers greetings warmly without searching the knowledge base', () {
-      expect(LocalConversation.replyTo('hola'), contains('Qué gusto leerte'));
+      expect(LocalConversation.replyTo('hola'), contains('Qué bueno verte'));
       expect(
         LocalConversation.replyTo('¡Buenos días, Toxo!'),
-        contains('¿Qué te gustaría explorar?'),
+        contains('¿Cómo va tu día?'),
       );
-      expect(LocalConversation.replyTo('¿Qué tal?'), contains('¡Hola!'));
+      expect(
+        LocalConversation.replyTo('¿Qué tal?'),
+        contains('Gracias por preguntar'),
+      );
+      expect(LocalConversation.isCasualChat('hola'), isTrue);
     });
 
     test('handles thanks and farewells', () {
@@ -26,6 +30,114 @@ void main() {
 
     test('leaves knowledge questions to local retrieval', () {
       expect(LocalConversation.replyTo('¿Cómo funciona la fotosíntesis?'), isNull);
+      expect(LocalConversation.isCasualChat('¿Cómo funciona la fotosíntesis?'), isFalse);
+      expect(
+        LocalConversation.intentFor('¿Qué son los átomos?'),
+        ChatIntent.research,
+      );
+      expect(
+        LocalConversation.intentFor('Explícame cómo se forma una estrella'),
+        ChatIntent.research,
+      );
+      expect(
+        LocalConversation.intentFor('Me gusta la música, háblame de fotosíntesis'),
+        ChatIntent.research,
+      );
+      for (final request in [
+        'Quiero saber sobre los planetas',
+        '¿Podrías explicarme cómo funciona el corazón?',
+        'Háblame sobre la historia de México',
+        '¿La fotosíntesis necesita luz?',
+      ]) {
+        expect(
+          LocalConversation.intentFor(request),
+          ChatIntent.research,
+          reason: request,
+        );
+      }
+    });
+
+    test('routes ordinary comments and small talk to conversation', () {
+      for (final message in [
+        '¿Qué tal?',
+        'hoy estoy cansado',
+        'me gusta la música',
+        'cuéntame algo',
+        'quisiera charlar un poco',
+        'me fue pesado el día',
+      ]) {
+        expect(
+          LocalConversation.intentFor(message),
+          ChatIntent.casual,
+          reason: message,
+        );
+      }
+    });
+
+    test('has a short non-encyclopedic fallback when no model is installed', () {
+      expect(
+        LocalConversation.casualFallback('hoy estoy cansado'),
+        contains('día largo'),
+      );
+      expect(
+        LocalConversation.casualFallback('me gusta la música'),
+        contains('Qué bueno'),
+      );
+      expect(
+        LocalConversation.casualFallback('cuéntame algo'),
+        contains('chistecito'),
+      );
+      expect(
+        LocalConversation.casualFallback('¿y tú?'),
+        contains('modelo local descargado'),
+      );
+    });
+
+    test('answers date, time, jokes, and open-ended chat without retrieval', () {
+      final today = LocalConversation.replyTo(
+        '¿Sabes qué día es hoy?',
+        now: DateTime(2026, 11, 7, 14, 3),
+      );
+      expect(today, contains('sábado, 7 de noviembre de 2026'));
+      expect(
+        LocalConversation.intentFor('¿Sabes qué día es hoy?'),
+        ChatIntent.casual,
+      );
+
+      expect(LocalConversation.replyTo('¿Qué hora es?'), contains('En tu dispositivo son las'));
+      expect(
+        LocalConversation.replyTo('¿Puedes contarme un chiste?'),
+        contains('Techo de menos'),
+      );
+      expect(
+        LocalConversation.replyTo('Cuéntame algo'),
+        contains('Una mini historia'),
+      );
+      expect(
+        LocalConversation.intentFor('¿Puedes contarme un chiste?'),
+        ChatIntent.casual,
+      );
+    });
+
+    test('keeps follow-ups conversational unless they ask for information', () {
+      expect(
+        LocalConversation.intentFor(
+          '¿Y tú?',
+          previousTurnWasCasual: true,
+        ),
+        ChatIntent.casual,
+      );
+      expect(
+        LocalConversation.intentFor(
+          '¿Por qué ocurre eso?',
+          previousTurnWasCasual: true,
+        ),
+        ChatIntent.research,
+      );
+      expect(
+        LocalConversation.intentFor('¿Qué te parece?', previousTurnWasCasual: true),
+        ChatIntent.casual,
+      );
     });
   });
 }

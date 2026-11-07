@@ -1,0 +1,180 @@
+name: Android signed release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require a version tag and signing secrets
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF_TYPE" != "tag" || ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Run this workflow from a version tag such as v1.2.3."
+            exit 1
+          fi
+          if [[ -z "$ANDROID_KEYSTORE_BASE64" || -z "$ANDROID_KEYSTORE_PASSWORD" || -z "$ANDROID_KEY_ALIAS" || -z "$ANDROID_KEY_PASSWORD" ]]; then
+            echo "::error::Configure all four Android signing secrets before publishing a release."
+            exit 1
+          fi
+
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Create Android host project
+        run: flutter create --platforms=android --project-name=toxo --org=app.toxo android-build
+
+      - name: Copy app source into host project
+        run: |
+          cp pubspec.yaml android-build/pubspec.yaml
+          rm -rf android-build/lib android-build/test
+          cp -R lib android-build/lib
+          cp -R test android-build/test
+          cp -R assets android-build/assets
+
+      - name: Enable network access for the in-app pack download
+        run: |
+          manifest=android-build/android/app/src/main/AndroidManifest.xml
+          if ! grep -q 'android.permission.INTERNET' "$manifest"; then
+            sed -i '/<application/i\    <uses-permission android:name="android.permission.INTERNET" />' "$manifest"
+          fi
+
+      - name: Resolve dependencies
+        working-directory: android-build
+        run: flutter pub get
+
+      - name: Stage the pinned llama.cpp Android runtime
+        working-directory: android-build
+        run: |
+          package_uri="$(jq -r '.packages[] | select(.name == "llama_cpp_dart") | .rootUri' .dart_tool/package_config.json)"
+          if [ -z "$package_uri" ] || [ "$package_uri" = "null" ]; then
+            echo "Could not locate llama_cpp_dart in the resolved package configuration." >&2
+            exit 1
+          fi
+          case "$package_uri" in
+            file://*) package_root="${package_uri#file://}" ;;
+            /*) package_root="$package_uri" ;;
+            *) package_root="$(realpath ".dart_tool/$package_uri")" ;;
+          esac
+          if [ ! -f "$package_root/hook/build.dart" ]; then
+            echo "Resolved llama_cpp_dart package has no hook/build.dart at $package_root." >&2
+            exit 1
+          fi
+          mkdir -p "$package_root/native/android"
+          aar="$package_root/native/android/llama-cpp-dart.aar"
+          curl --fail --location --retry 3 \
+            https://github.com/netdur/llama_cpp_dart/releases/download/v0.9.0-dev.12/llama-cpp-dart.aar \
+            --output "$aar"
+          echo "1c41947689d1f9f85edfa5ae56706e37ae8cdd03172a426e71bcd75ef9778019  $aar" | sha256sum --check
+
+      - name: Run tests
+        working-directory: android-build
+        run: flutter test
+
+      - name: Prepare signing keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          mkdir -p android-build/android/app
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android-build/android/app/upload-keystore.jks
+          chmod 600 android-build/android/app/upload-keystore.jks
+
+      - name: Validate signing keystore
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          keytool -list -keystore android-build/android/app/upload-keystore.jks \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" -alias "$ANDROID_KEY_ALIAS" >/dev/null
+
+      - name: Configure release signing
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          gradle_file = Path("android-build/android/app/build.gradle.kts")
+          text = gradle_file.read_text()
+          anchor = re.search(r"(?m)^flutter\s*\{", text)
+          if not anchor:
+              raise SystemExit("Could not find the Flutter Gradle block; refusing to build an unsigned release.")
+
+          signing = '''
+          android {
+              signingConfigs {
+                  create("toxoRelease") {
+                      storeFile = file("upload-keystore.jks")
+                      storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                      keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                      keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+                  }
+              }
+              buildTypes {
+                  getByName("release") {
+                      signingConfig = signingConfigs.getByName("toxoRelease")
+                  }
+              }
+          }
+
+          '''
+          gradle_file.write_text(text[:anchor.start()] + signing + text[anchor.start():])
+          PY
+
+      - name: Build signed release APK
+        working-directory: android-build
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          flutter build apk --release --target-platform android-arm64 \
+            --build-name="$version" --build-number="$GITHUB_RUN_NUMBER"
+
+      - name: Verify APK signature and package ID
+        run: |
+          apk=android-build/build/app/outputs/flutter-apk/app-release.apk
+          apksigner="$(find "$ANDROID_HOME/build-tools" -type f -name apksigner | sort -V | tail -n 1)"
+          if [ -z "$apksigner" ]; then
+            echo "Android SDK apksigner was not found." >&2
+            exit 1
+          fi
+          "$apksigner" verify --verbose --print-certs "$apk"
+          aapt="$(find "$ANDROID_HOME/build-tools" -type f -name aapt | sort -V | tail -n 1)"
+          package_id="$("$aapt" dump badging "$apk" | sed -n "s/^package: name='\\([^']*\\)'.*/\\1/p")"
+          if [ "$package_id" != "app.toxo.toxo" ]; then
+            echo "Unexpected package ID '$package_id'; expected app.toxo.toxo." >&2
+            exit 1
+          fi
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: android-build/build/app/outputs/flutter-apk/app-release.apk
+          name: Toxo ${{ github.ref_name }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true

@@ -27,6 +27,16 @@ class MemoryPreference {
   final String note;
 }
 
+class ConversationMessage {
+  const ConversationMessage({
+    required this.isAssistant,
+    required this.text,
+  });
+
+  final bool isAssistant;
+  final String text;
+}
+
 class KnowledgeDatabase {
   KnowledgeDatabase(this._db);
 
@@ -48,9 +58,25 @@ class KnowledgeDatabase {
         id TEXT PRIMARY KEY,
         package_id TEXT NOT NULL REFERENCES sources(package_id),
         title TEXT NOT NULL,
-        text TEXT NOT NULL
+        text TEXT NOT NULL,
+        source_url TEXT,
+        source_title TEXT,
+        license TEXT,
+        attribution TEXT
       )
     ''');
+    final articleColumns = _db
+        .select('PRAGMA table_info(articles)')
+        .map((row) => row['name'] as String)
+        .toSet();
+    if (!articleColumns.contains('source_url')) {
+      _db.execute('ALTER TABLE articles ADD COLUMN source_url TEXT');
+    }
+    for (final column in ['source_title', 'license', 'attribution']) {
+      if (!articleColumns.contains(column)) {
+        _db.execute('ALTER TABLE articles ADD COLUMN $column TEXT');
+      }
+    }
     _db.execute('''
       CREATE VIRTUAL TABLE IF NOT EXISTS articles_fts USING fts5(
         title, text, content='articles', content_rowid='rowid'
@@ -72,9 +98,32 @@ class KnowledgeDatabase {
       CREATE TABLE IF NOT EXISTS preferences (
         id INTEGER PRIMARY KEY CHECK (id = 1),
         memory_enabled INTEGER NOT NULL DEFAULT 0,
-        style TEXT NOT NULL DEFAULT 'cercano'
+        style TEXT NOT NULL DEFAULT 'cercano',
+        appearance TEXT NOT NULL DEFAULT 'neural',
+        visual_effects TEXT NOT NULL DEFAULT 'dynamic',
+        conversation_history_enabled INTEGER NOT NULL DEFAULT 0
       )
     ''');
+    final preferenceColumns = _db
+        .select('PRAGMA table_info(preferences)')
+        .map((row) => row['name'] as String)
+        .toSet();
+    if (!preferenceColumns.contains('appearance')) {
+      _db.execute(
+        "ALTER TABLE preferences ADD COLUMN appearance TEXT NOT NULL DEFAULT 'neural'",
+      );
+    }
+    if (!preferenceColumns.contains('visual_effects')) {
+      _db.execute(
+        "ALTER TABLE preferences ADD COLUMN visual_effects TEXT NOT NULL DEFAULT 'dynamic'",
+      );
+    }
+    if (!preferenceColumns.contains('conversation_history_enabled')) {
+      _db.execute(
+        'ALTER TABLE preferences ADD COLUMN conversation_history_enabled '
+        'INTEGER NOT NULL DEFAULT 0',
+      );
+    }
     _db.execute(
       "INSERT OR IGNORE INTO preferences(id, memory_enabled, style) "
       "VALUES (1, 0, 'cercano')",
@@ -83,6 +132,14 @@ class KnowledgeDatabase {
       CREATE TABLE IF NOT EXISTS memories (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         note TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      )
+    ''');
+    _db.execute('''
+      CREATE TABLE IF NOT EXISTS conversation_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        is_assistant INTEGER NOT NULL,
+        text TEXT NOT NULL,
         created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
       )
     ''');
@@ -96,9 +153,25 @@ class KnowledgeDatabase {
           .first['memory_enabled'] ==
       1;
 
+  bool get conversationHistoryEnabled =>
+      _db
+          .select(
+            'SELECT conversation_history_enabled FROM preferences WHERE id = 1',
+          )
+          .first['conversation_history_enabled'] ==
+      1;
+
   String get style => _db.select(
         'SELECT style FROM preferences WHERE id = 1',
       ).first['style'] as String;
+
+  String get appearance => _db.select(
+        'SELECT appearance FROM preferences WHERE id = 1',
+      ).first['appearance'] as String;
+
+  String get visualEffects => _db.select(
+        'SELECT visual_effects FROM preferences WHERE id = 1',
+      ).first['visual_effects'] as String;
 
   void setMemoryEnabled(bool enabled) {
     _db.execute(
@@ -110,11 +183,71 @@ class KnowledgeDatabase {
     }
   }
 
+  void setConversationHistoryEnabled(bool enabled) {
+    _db.execute(
+      'UPDATE preferences SET conversation_history_enabled = ? WHERE id = 1',
+      [enabled ? 1 : 0],
+    );
+    if (!enabled) clearConversationHistory();
+  }
+
+  void saveConversationMessage(ConversationMessage message) {
+    if (!conversationHistoryEnabled) return;
+    final text = message.text.trim();
+    if (text.isEmpty) return;
+    _db.execute(
+      'INSERT INTO conversation_history(is_assistant, text) VALUES (?, ?)',
+      [message.isAssistant ? 1 : 0, text],
+    );
+    _db.execute(
+      'DELETE FROM conversation_history WHERE id NOT IN '
+      '(SELECT id FROM conversation_history ORDER BY id DESC LIMIT 100)',
+    );
+  }
+
+  List<ConversationMessage> get conversationHistory => _db
+      .select(
+        'SELECT is_assistant, text FROM conversation_history ORDER BY id DESC LIMIT 100',
+      )
+      .toList(growable: false)
+      .reversed
+      .map(
+        (row) => ConversationMessage(
+          isAssistant: row['is_assistant'] == 1,
+          text: row['text'] as String,
+        ),
+      )
+      .toList(growable: false);
+
+  void clearConversationHistory() {
+    _db.execute('DELETE FROM conversation_history');
+  }
+
   void setStyle(String value) {
     if (value != 'cercano' && value != 'breve') {
       throw ArgumentError.value(value, 'value', 'Estilo no admitido.');
     }
     _db.execute('UPDATE preferences SET style = ? WHERE id = 1', [value]);
+  }
+
+  void setAppearance(String value) {
+    if (value != 'neural' && value != 'mint') {
+      throw ArgumentError.value(value, 'value', 'Tema no admitido.');
+    }
+    _db.execute(
+      'UPDATE preferences SET appearance = ? WHERE id = 1',
+      [value],
+    );
+  }
+
+  void setVisualEffects(String value) {
+    if (value != 'dynamic' && value != 'subtle' && value != 'off') {
+      throw ArgumentError.value(value, 'value', 'Intensidad no admitida.');
+    }
+    _db.execute(
+      'UPDATE preferences SET visual_effects = ? WHERE id = 1',
+      [value],
+    );
   }
 
   void remember(String note) {
@@ -174,20 +307,41 @@ class KnowledgeDatabase {
       }
       for (final article in package.articles) {
         final existing = _db.select(
-          'SELECT package_id, title, text FROM articles WHERE id = ?',
+          'SELECT package_id, title, text, source_url, source_title, license, '
+          'attribution FROM articles WHERE id = ?',
           [article.id],
         );
+        final sameContentFromAnotherPackage =
+            existing.isNotEmpty &&
+            existing.first['package_id'] != package.packageId &&
+            existing.first['title'] == article.title &&
+            existing.first['text'] == article.text;
         if (existing.isNotEmpty &&
-            (existing.first['package_id'] != package.packageId ||
-                existing.first['title'] != article.title ||
-                existing.first['text'] != article.text)) {
+            !sameContentFromAnotherPackage &&
+            (existing.first['title'] != article.title ||
+                existing.first['text'] != article.text ||
+                existing.first['source_url'] != article.sourceUrl ||
+                existing.first['source_title'] != article.sourceTitle ||
+                existing.first['license'] != article.license ||
+                existing.first['attribution'] != article.attribution)) {
           throw FormatException(
             'El identificador de artículo "${article.id}" ya está en uso.',
           );
         }
         _db.execute(
-          'INSERT OR IGNORE INTO articles(id, package_id, title, text) VALUES (?, ?, ?, ?)',
-          [article.id, package.packageId, article.title, article.text],
+          'INSERT OR IGNORE INTO articles'
+          '(id, package_id, title, text, source_url, source_title, license, '
+          'attribution) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            article.id,
+            package.packageId,
+            article.title,
+            article.text,
+            article.sourceUrl,
+            article.sourceTitle,
+            article.license,
+            article.attribution,
+          ],
         );
       }
       _db.execute('COMMIT');
@@ -210,8 +364,10 @@ class KnowledgeDatabase {
         terms.map((term) => '"${term.replaceAll('"', '""')}"').join(' OR ');
     final rows = _db.select(
       '''
-      SELECT a.title, a.text, s.title AS source_title, s.license,
-             s.attribution, s.url AS source_url
+      SELECT a.title, a.text, COALESCE(a.source_title, s.title) AS source_title,
+             COALESCE(a.license, s.license) AS license,
+             COALESCE(a.attribution, s.attribution) AS attribution,
+             COALESCE(a.source_url, s.url) AS source_url
       FROM articles_fts
       JOIN articles a ON a.rowid = articles_fts.rowid
       JOIN sources s ON s.package_id = a.package_id

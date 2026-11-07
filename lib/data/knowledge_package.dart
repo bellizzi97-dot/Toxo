@@ -5,17 +5,45 @@ class KnowledgeArticle {
     required this.id,
     required this.title,
     required this.text,
+    this.sourceUrl,
+    this.sourceTitle,
+    this.license,
+    this.attribution,
   });
 
   final String id;
   final String title;
   final String text;
+  final String? sourceUrl;
+  final String? sourceTitle;
+  final String? license;
+  final String? attribution;
 
   factory KnowledgeArticle.fromJson(Map<String, Object?> json) {
+    final sourceUrl = json['sourceUrl'];
+    if (sourceUrl != null &&
+        (sourceUrl is! String || !_isHttpsUrl(sourceUrl.trim()))) {
+      throw const FormatException(
+        'La URL del artículo debe usar HTTPS.',
+      );
+    }
+    String? optionalString(String key) {
+      final value = json[key];
+      if (value == null) return null;
+      if (value is! String || value.trim().isEmpty) {
+        throw FormatException('El campo "$key" del artículo no es válido.');
+      }
+      return value.trim();
+    }
+
     return KnowledgeArticle(
       id: _requiredString(json, 'id'),
       title: _requiredString(json, 'title'),
       text: _requiredString(json, 'text'),
+      sourceUrl: sourceUrl is String ? sourceUrl.trim() : null,
+      sourceTitle: optionalString('sourceTitle'),
+      license: optionalString('license'),
+      attribution: optionalString('attribution'),
     );
   }
 }
@@ -97,4 +125,9 @@ String _requiredString(Map<String, Object?> json, String key) {
     throw FormatException('El campo "$key" es obligatorio.');
   }
   return value.trim();
+}
+
+bool _isHttpsUrl(String value) {
+  final url = Uri.tryParse(value);
+  return url != null && url.scheme == 'https' && url.host.isNotEmpty;
 }

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "packId": "toxo-android-starter-es",
+  "version": 3,
+  "title": "Pack offline en español · edición 3",
+  "model": {
+    "id": "qwen2.5-0.5b-instruct-q4-k-m",
+    "fileName": "Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+    "url": "https://huggingface.co/bartowski/Qwen2.5-0.5B-Instruct-GGUF/resolve/41ba88dbac95fed2528c92514c131d73eb5a174b/Qwen2.5-0.5B-Instruct-Q4_K_M.gguf",
+    "sizeBytes": 397808192,
+    "sha256": "6eb923e7d26e9cea28811e1a8e852009b21242fb157b26149d3b188f3a8c8653",
+    "license": "Apache-2.0",
+    "licenseUrl": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct/blob/main/LICENSE",
+    "attribution": "Qwen Team; cuantización GGUF por bartowski",
+    "sourceUrl": "https://huggingface.co/bartowski/Qwen2.5-0.5B-Instruct-GGUF/tree/41ba88dbac95fed2528c92514c131d73eb5a174b"
+  },
+  "knowledge": {
+    "id": "toxo-conocimientos-es-v3",
+    "fileName": "toxo-conocimientos-es-v3.json",
+    "url": "https://raw.githubusercontent.com/bellizzi97-dot/Toxo/cb63e1f9ef7f9aa875ecb5dc06b271c29ce2a764/assets/packs/toxo-conocimientos-es-v3.json",
+    "sizeBytes": 47881,
+    "sha256": "7ae1ec7bb98feeb3187fa5ea5a0904507cc22d346d04be2d3e002f05a9708115",
+    "license": "CC0-1.0 and CC BY-SA 4.0 (per article)",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+    "attribution": "Per-article CC0-1.0 / Wikipedia contributors CC BY-SA 4.0 attribution and revision URLs are included in the package.",
+    "sourceUrl": "https://github.com/bellizzi97-dot/Toxo"
+  }
+}

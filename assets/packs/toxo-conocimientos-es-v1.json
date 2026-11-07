@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "packageId": "toxo-conocimientos-es-v1",
+  "source": {
+    "title": "Conocimientos abiertos en español para Toxo",
+    "license": "CC0-1.0",
+    "attribution": "Contenido original escrito para el proyecto Toxo",
+    "url": "https://github.com/bellizzi97-dot/Toxo"
+  },
+  "articles": [
+    {
+      "id": "toxo-pack-fotosintesis",
+      "title": "Fotosíntesis",
+      "text": "La fotosíntesis permite que plantas, algas y algunas bacterias usen energía de la luz para transformar agua y dióxido de carbono en azúcares. En las plantas ocurre principalmente en los cloroplastos de las hojas. El proceso también libera oxígeno y almacena energía química que alimenta numerosos ecosistemas."
+    },
+    {
+      "id": "toxo-pack-ciclo-agua",
+      "title": "El ciclo del agua",
+      "text": "El ciclo del agua describe el movimiento continuo del agua entre océanos, atmósfera y tierra. El calor causa evaporación; al enfriarse el vapor se condensa en nubes y puede caer como precipitación. Parte del agua se infiltra en el suelo y parte fluye por ríos hasta el mar. La energía solar y la gravedad impulsan distintas etapas."
+    },
+    {
+      "id": "toxo-pack-ecosistemas",
+      "title": "Ecosistemas",
+      "text": "Un ecosistema reúne los seres vivos de un lugar y los componentes físicos con los que interactúan, como agua, suelo, aire y luz. Los productores capturan energía, los consumidores se alimentan de otros organismos y los descomponedores reciclan nutrientes. Las relaciones entre estos elementos hacen que un cambio en una población pueda afectar a otras."
+    },
+    {
+      "id": "toxo-pack-volcanes",
+      "title": "Volcanes",
+      "text": "Un volcán es una abertura de la corteza terrestre por la que pueden salir magma, gases y fragmentos de roca. Cuando el magma alcanza la superficie se llama lava. Muchos volcanes se forman cerca de límites de placas tectónicas o sobre puntos calientes. Las erupciones crean rocas y suelos, pero pueden presentar riesgos para comunidades cercanas."
+    },
+    {
+      "id": "toxo-pack-luna",
+      "title": "La Luna",
+      "text": "La Luna es el satélite natural de la Tierra. La gravedad terrestre la mantiene en órbita y la gravedad lunar contribuye a las mareas. La Luna no produce luz visible propia: refleja la luz del Sol. Desde la Tierra vemos fases distintas porque cambia la porción iluminada que queda orientada hacia nosotros durante su órbita."
+    },
+    {
+      "id": "toxo-pack-sistema-solar",
+      "title": "Sistema solar",
+      "text": "El sistema solar está formado por el Sol y los objetos ligados a su gravedad, entre ellos ocho planetas, lunas, planetas enanos, asteroides y cometas. Mercurio, Venus, la Tierra y Marte son planetas rocosos. Júpiter y Saturno son gigantes gaseosos; Urano y Neptuno son gigantes helados. La Tierra completa una órbita alrededor del Sol aproximadamente cada 365 días."
+    },
+    {
+      "id": "toxo-pack-celula",
+      "title": "La célula",
+      "text": "La célula es la unidad básica de los seres vivos. Una membrana separa su interior del entorno y regula el intercambio de sustancias. Las células pueden contener estructuras con funciones especializadas: en las eucariotas el núcleo guarda la mayor parte del material genético, y las mitocondrias participan en la obtención de energía."
+    },
+    {
+      "id": "toxo-pack-gravedad",
+      "title": "Gravedad",
+      "text": "La gravedad es una interacción por la que los cuerpos con masa se atraen. En la vida diaria mantiene los objetos cerca de la superficie terrestre y hace que la Luna siga una órbita alrededor de la Tierra. La intensidad del efecto depende de las masas involucradas y de la distancia entre ellas."
+    },
+    {
+      "id": "toxo-pack-oceanos",
+      "title": "Océanos",
+      "text": "Los océanos cubren gran parte de la superficie de la Tierra y conectan regiones del planeta mediante corrientes. Absorben y redistribuyen calor, intervienen en el ciclo del agua y ofrecen hábitats a una gran diversidad de organismos. La salinidad, temperatura, profundidad y luz cambian entre zonas y condicionan la vida marina."
+    },
+    {
+      "id": "toxo-pack-dinosaurios",
+      "title": "Dinosaurios",
+      "text": "Los dinosaurios fueron un grupo diverso de reptiles que vivió durante la era Mesozoica. Sus fósiles muestran diferencias de tamaño, dieta y forma de desplazamiento. Las aves actuales pertenecen al linaje de dinosaurios terópodos. La mayoría de los dinosaurios no avianos desapareció al final del Cretácico, mientras que las aves sobrevivieron."
+    },
+    {
+      "id": "toxo-pack-magnetismo",
+      "title": "Magnetismo",
+      "text": "El magnetismo es un fenómeno asociado al movimiento de cargas eléctricas y a propiedades magnéticas de algunos materiales. Un imán tiene polos norte y sur; polos iguales se repelen y polos opuestos se atraen. La Tierra también genera un campo magnético que influye en brújulas y ayuda a desviar parte de las partículas cargadas del viento solar."
+    },
+    {
+      "id": "toxo-pack-cerebro",
+      "title": "El cerebro",
+      "text": "El cerebro forma parte del sistema nervioso y procesa información que llega de los sentidos, participa en el movimiento y coordina funciones del cuerpo. Está compuesto por redes de neuronas y otras células que se comunican mediante señales eléctricas y químicas. El aprendizaje implica cambios en la actividad y las conexiones de esas redes."
+    },
+    {
+      "id": "toxo-pack-rocas",
+      "title": "Rocas y minerales",
+      "text": "Un mineral es una sustancia natural con composición química y estructura cristalina características. Las rocas son agregados de uno o varios minerales. Según cómo se forman, las rocas pueden ser ígneas, sedimentarias o metamórficas. El ciclo de las rocas describe transformaciones causadas por enfriamiento, erosión, presión, calor y otros procesos geológicos."
+    },
+    {
+      "id": "toxo-pack-energia",
+      "title": "Energía",
+      "text": "La energía es una propiedad que permite describir cambios y la capacidad de realizar trabajo. Puede presentarse como movimiento, calor, energía química, eléctrica, luminosa o potencial. En muchos procesos la energía cambia de forma y se transfiere entre objetos; la energía total de un sistema aislado se conserva."
+    },
+    {
+      "id": "toxo-pack-arboles",
+      "title": "Árboles y bosques",
+      "text": "Los árboles son plantas leñosas que pueden vivir muchos años y crecer formando bosques junto con otras especies. Sus raíces absorben agua y nutrientes, sus hojas captan luz, y su madera sostiene el tronco y las ramas. Los bosques almacenan carbono, protegen suelos y proporcionan alimento y refugio a numerosos organismos."
+    }
+  ]
+}
