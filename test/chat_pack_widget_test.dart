@@ -5,8 +5,6 @@ import 'dart:io';
 import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:toxo/data/knowledge_database.dart';
 import 'package:toxo/data/offline_pack_manager.dart';
@@ -17,37 +15,20 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory supportDirectory;
   late KnowledgeDatabase database;
-  late OfflinePackManager manager;
-  late MockClient client;
-  late Completer<void> knowledgeResponse;
+  late _FakePackManager manager;
 
   setUp(() async {
     supportDirectory = await Directory.systemTemp.createTemp('toxo-chat-test-');
     database = KnowledgeDatabase(sqlite3.open(':memory:'))..initialize();
-    final model = utf8.encode('model fixture');
-    final knowledge = utf8.encode(_knowledgeJson);
-    knowledgeResponse = Completer<void>();
-    client = MockClient((request) async {
-      if (request.url.path.endsWith('library.json')) {
-        await knowledgeResponse.future;
-        return http.Response.bytes(knowledge, 200);
-      }
-      return http.Response.bytes(model, 200);
-    });
-    manager = OfflinePackManager(
-      manifest: OfflinePackManifest.decode(
-        jsonEncode(_manifestJson(model, knowledge)),
-      ),
+    manager = _FakePackManager(
+      manifest: OfflinePackManifest.decode(jsonEncode(_manifestJson)),
       database: database,
       supportDirectory: supportDirectory,
-      client: client,
     );
   });
 
   tearDown(() async {
-    if (!knowledgeResponse.isCompleted) knowledgeResponse.complete();
     manager.close();
-    client.close();
     database.close();
     await supportDirectory.delete(recursive: true);
   });
@@ -66,21 +47,77 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Descargar'));
     await tester.pump();
 
-    expect(find.text('Preparando la descarga…'), findsOneWidget);
+    expect(find.text('Descargando la biblioteca abierta…'), findsOneWidget);
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
     await tester.tap(find.text('Cancelar'));
-    knowledgeResponse.complete();
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
     await tester.pumpAndSettle();
 
     expect(find.textContaining('Descarga cancelada'), findsOneWidget);
     expect(find.text('Reintentar'), findsOneWidget);
     expect(await manager.isInstalled, isFalse);
+    expect(manager.cancelled, isTrue);
   });
 }
 
-Map<String, Object?> _manifestJson(List<int> model, List<int> knowledge) => {
+class _FakePackManager implements OfflinePackManager {
+  _FakePackManager({
+    required this.manifest,
+    required this.database,
+    required this.supportDirectory,
+  });
+
+  @override
+  final OfflinePackManifest manifest;
+  @override
+  final KnowledgeDatabase database;
+  @override
+  final Directory supportDirectory;
+
+  final _completion = Completer<void>();
+  void Function(PackProgress progress)? _onProgress;
+  bool cancelled = false;
+
+  @override
+  File get modelFile => File('model-fixture.gguf');
+
+  @override
+  Future<bool> get isInstalled async => false;
+
+  @override
+  Future<void> downloadAndInstall({
+    required void Function(PackProgress progress) onProgress,
+  }) {
+    _onProgress = onProgress;
+    onProgress(
+      PackProgress(
+        stage: PackInstallStage.downloadingKnowledge,
+        message: 'Descargando la biblioteca abierta…',
+        downloadedBytes: 0,
+        totalBytes: manifest.totalBytes,
+      ),
+    );
+    return _completion.future;
+  }
+
+  @override
+  void cancelDownload() {
+    cancelled = true;
+    _onProgress!(
+      PackProgress(
+        stage: PackInstallStage.failed,
+        message: 'Descarga cancelada. Puedes volver a intentarlo cuando quieras.',
+        downloadedBytes: 0,
+        totalBytes: manifest.totalBytes,
+      ),
+    );
+    _completion.completeError(const PackDownloadCancelled());
+  }
+
+  @override
+  void close() {}
+}
+
+final _manifestJson = {
   'schemaVersion': 1,
   'packId': 'toxo-widget-test',
   'version': 1,
@@ -89,8 +126,8 @@ Map<String, Object?> _manifestJson(List<int> model, List<int> knowledge) => {
     'id': 'test-model',
     'fileName': 'model.gguf',
     'url': 'https://example.test/model.gguf',
-    'sizeBytes': model.length,
-    'sha256': sha256.convert(model).toString(),
+    'sizeBytes': 13,
+    'sha256': sha256.convert(utf8.encode('model fixture')).toString(),
     'license': 'Apache-2.0',
     'licenseUrl': 'https://example.test/license',
     'attribution': 'Modelo de prueba',
@@ -100,27 +137,11 @@ Map<String, Object?> _manifestJson(List<int> model, List<int> knowledge) => {
     'id': 'test-knowledge',
     'fileName': 'library.json',
     'url': 'https://example.test/library.json',
-    'sizeBytes': knowledge.length,
-    'sha256': sha256.convert(knowledge).toString(),
+    'sizeBytes': 1,
+    'sha256': sha256.convert([1]).toString(),
     'license': 'CC0-1.0',
     'licenseUrl': 'https://example.test/license',
     'attribution': 'Contenido de prueba',
     'sourceUrl': 'https://example.test/library',
   },
 };
-
-const _knowledgeJson = '''
-{
-  "schemaVersion": 1,
-  "packageId": "test-knowledge",
-  "source": {
-    "title": "Biblioteca de prueba",
-    "license": "CC0-1.0",
-    "attribution": "Contenido de prueba",
-    "url": "https://example.test/library"
-  },
-  "articles": [
-    {"id": "test-1", "title": "Fotosíntesis", "text": "La luz y las plantas."}
-  ]
-}
-''';
