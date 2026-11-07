@@ -41,10 +41,34 @@ jobs:
           rm -rf android-build/lib android-build/test
           cp -R lib android-build/lib
           cp -R test android-build/test
+          cp -R assets android-build/assets
+
+      - name: Enable network access for the in-app pack download
+        run: |
+          manifest=android-build/android/app/src/main/AndroidManifest.xml
+          if ! grep -q 'android.permission.INTERNET' "$manifest"; then
+            sed -i '/<application/i\    <uses-permission android:name="android.permission.INTERNET" />' "$manifest"
+          fi
 
       - name: Resolve dependencies
         working-directory: android-build
         run: flutter pub get
+
+      - name: Stage the pinned llama.cpp Android runtime
+        working-directory: android-build
+        run: |
+          package_build_hook="$(find "$HOME/.pub-cache/git/checkouts" -type f -path '*/llama_cpp_dart-*/hook/build.dart' -print -quit)"
+          if [ -z "$package_build_hook" ]; then
+            echo "Could not locate the pinned llama_cpp_dart package in the pub cache." >&2
+            exit 1
+          fi
+          package_root="${package_build_hook%/hook/build.dart}"
+          mkdir -p "$package_root/native/android"
+          aar="$package_root/native/android/llama-cpp-dart.aar"
+          curl --fail --location --retry 3 \
+            https://github.com/netdur/llama_cpp_dart/releases/download/v0.9.0-dev.12/llama-cpp-dart.aar \
+            --output "$aar"
+          echo "1c41947689d1f9f85edfa5ae56706e37ae8cdd03172a426e71bcd75ef9778019  $aar" | sha256sum --check
 
       - name: Run tests
         working-directory: android-build
@@ -52,7 +76,7 @@ jobs:
 
       - name: Build debug APK
         working-directory: android-build
-        run: flutter build apk --debug
+        run: flutter build apk --debug --target-platform android-arm64
 
       - name: Upload test APK
         uses: actions/upload-artifact@v4

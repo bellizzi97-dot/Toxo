@@ -5,6 +5,8 @@ import 'package:sqlite3/sqlite3.dart';
 
 import 'data/demo_package.dart';
 import 'data/knowledge_database.dart';
+import 'data/offline_pack_manager.dart';
+import 'data/offline_pack_manifest.dart';
 import 'screens/chat_screen.dart';
 
 Future<void> main() async {
@@ -17,13 +19,23 @@ Future<void> main() async {
   if (database.articleCount == 0) {
     database.importPackage(demoKnowledgePackage);
   }
-  runApp(ToxoApp(database: database));
+  final packManager = OfflinePackManager(
+    manifest: await OfflinePackManifest.loadBundled(),
+    database: database,
+    supportDirectory: documentsDirectory,
+  );
+  runApp(ToxoApp(database: database, packManager: packManager));
 }
 
 class ToxoApp extends StatelessWidget {
-  const ToxoApp({required this.database, super.key});
+  const ToxoApp({
+    required this.database,
+    required this.packManager,
+    super.key,
+  });
 
   final KnowledgeDatabase database;
+  final OfflinePackManager packManager;
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +53,7 @@ class ToxoApp extends StatelessWidget {
           centerTitle: false,
         ),
       ),
-      home: ChatScreen(database: database),
+      home: ChatScreen(database: database, packManager: packManager),
     );
   }
 }
