@@ -62,6 +62,8 @@ Para configurar la URL pública del backend en una compilación:
 flutter build apk --debug --dart-define=TOXO_API_BASE_URL=https://TU-SERVICIO.run.app
 ```
 
+Para que GitHub Actions incluya la URL en la APK, crea la variable de repositorio `TOXO_API_BASE_URL` en **Settings → Secrets and variables → Actions → Variables** y vuelve a ejecutar el workflow. La URL no es un secreto; la clave de Gemini sí lo es y permanece en Secret Manager.
+
 ### Backend de prueba en Google Cloud
 
 Requiere un proyecto de Google Cloud con facturación habilitada. Restringe la clave de AI Studio a la API de Gemini y configura cuotas; en Google Cloud Console, crea un secreto de Secret Manager llamado `gemini-api-key` con esa clave y una base de datos Firestore en modo nativo. No guardes la clave en el repositorio ni en archivos de configuración de Flutter.
