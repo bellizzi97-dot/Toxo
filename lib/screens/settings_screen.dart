@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/knowledge_database.dart';
+import 'feedback_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({required this.database, super.key});
@@ -97,6 +98,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (value) {
                 widget.database.setMemoryEnabled(value);
                 setState(() {});
+              },
+            ),
+          ),
+          Card(
+            child: SwitchListTile(
+              title: const Text('Probar IA por internet'),
+              subtitle: const Text(
+                'Solo se enviará una pregunta cuando pulses “Preguntar a IA”. '
+                'No se envían el historial ni tus preferencias. '
+                'Requiere internet y un backend configurado.',
+              ),
+              value: widget.database.aiEnabled,
+              onChanged: (value) {
+                widget.database.setAiEnabled(value);
+                setState(() {});
+              },
+            ),
+          ),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.feedback_outlined),
+              title: const Text('Enviar comentarios'),
+              subtitle: const Text('Comparte sugerencias o reporta un problema.'),
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const FeedbackScreen(),
+                  ),
+                );
               },
             ),
           ),

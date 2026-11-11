@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../data/local_conversation.dart';
 import '../data/knowledge_database.dart';
 import '../data/knowledge_package.dart';
+import '../services/toxo_api_client.dart';
 import 'settings_screen.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -17,10 +18,11 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final _input = TextEditingController();
   final _scrollController = ScrollController();
+  final _api = ToxoApiClient();
   final _messages = <_ChatMessage>[
     const _ChatMessage(
       text:
-          '¡Hola! Soy Toxo. En este prototipo puedo buscar en los paquetes de conocimiento que importes. Mis respuestas son locales y muestran sus fuentes.',
+          '¡Hola! Soy Toxo. Puedo buscar localmente en tus paquetes de conocimiento y mostrarte sus fuentes. Si activas la IA, también puedes enviarle una pregunta cuando tú decidas.',
       isAssistant: true,
     ),
   ];
@@ -29,6 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void dispose() {
     _input.dispose();
     _scrollController.dispose();
+    _api.close();
     super.dispose();
   }
 
@@ -48,10 +51,11 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       } else if (results.isEmpty) {
         _messages.add(
-          const _ChatMessage(
+          _ChatMessage(
             text:
                 'Todavía no encuentro eso en tu biblioteca local. Importa un paquete de conocimiento abierto para que pueda buscarlo. No voy a inventar una respuesta.',
             isAssistant: true,
+            aiQuestion: widget.database.aiEnabled ? question : null,
           ),
         );
       } else {
@@ -77,6 +81,43 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     });
+  }
+
+  Future<void> _askAi(String question, int messageIndex) async {
+    setState(() {
+      final message = _messages[messageIndex];
+      _messages[messageIndex] = _ChatMessage(
+        text: message.text,
+        isAssistant: true,
+      );
+      _messages.add(
+        const _ChatMessage(
+          text: 'Consultando el servicio de IA…',
+          isAssistant: true,
+          isLoading: true,
+        ),
+      );
+    });
+    final responseIndex = _messages.length - 1;
+    try {
+      final answer = await _api.ask(question);
+      if (!mounted) return;
+      setState(() {
+        _messages[responseIndex] = _ChatMessage(
+          text: answer,
+          isAssistant: true,
+          isAiAnswer: true,
+        );
+      });
+    } on ToxoApiException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _messages[responseIndex] = _ChatMessage(
+          text: 'No pude consultar la IA: ${error.message}',
+          isAssistant: true,
+        );
+      });
+    }
   }
 
   Future<void> _importPackage() async {
@@ -165,7 +206,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   style: TextStyle(fontWeight: FontWeight.w800, fontSize: 19),
                 ),
                 Text(
-                  'TU COMPA LOCAL',
+                  'OFFLINE + IA OPCIONAL',
                   style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
                 ),
               ],
@@ -219,7 +260,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 SizedBox(width: 9),
                 Expanded(
                   child: Text(
-                    'Modo de prueba: busco en textos guardados y te enseño las fuentes. El modelo generativo local aún está en desarrollo.',
+                    'Tu biblioteca local funciona sin conexión. Si activas “Probar IA”, puedes enviar una pregunta al servicio en línea cuando quieras.',
                     style: TextStyle(
                       color: Color(0xFF654315),
                       fontSize: 12,
@@ -237,7 +278,14 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: _messages.length + (_messages.length == 1 ? 1 : 0),
               itemBuilder: (context, index) {
                 if (index < _messages.length) {
-                  return _MessageBubble(message: _messages[index]);
+                  final message = _messages[index];
+                  return _MessageBubble(
+                    message: message,
+                    onAiRequest: !widget.database.aiEnabled ||
+                            message.aiQuestion == null
+                        ? null
+                        : () => _askAi(message.aiQuestion!, index),
+                  );
                 }
                 return _PromptSuggestions(onSelect: _send);
               },
@@ -438,17 +486,24 @@ class _ChatMessage {
     required this.text,
     required this.isAssistant,
     this.citations = const [],
+    this.aiQuestion,
+    this.isLoading = false,
+    this.isAiAnswer = false,
   });
 
   final String text;
   final bool isAssistant;
   final List<KnowledgeResult> citations;
+  final String? aiQuestion;
+  final bool isLoading;
+  final bool isAiAnswer;
 }
 
 class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message});
+  const _MessageBubble({required this.message, this.onAiRequest});
 
   final _ChatMessage message;
+  final VoidCallback? onAiRequest;
 
   @override
   Widget build(BuildContext context) {
@@ -495,10 +550,38 @@ class _MessageBubble extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SelectableText(
-                        message.text,
-                        style: const TextStyle(height: 1.4),
-                      ),
+                      if (message.isLoading)
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      else ...[
+                        if (message.isAiAnswer)
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 6),
+                            child: Text(
+                              'Respuesta de IA en línea',
+                              style: TextStyle(
+                                color: Color(0xFF52756A),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        SelectableText(
+                          message.text,
+                          style: const TextStyle(height: 1.4),
+                        ),
+                      ],
+                      if (onAiRequest != null) ...[
+                        const SizedBox(height: 10),
+                        OutlinedButton.icon(
+                          onPressed: onAiRequest,
+                          icon: const Icon(Icons.auto_awesome, size: 18),
+                          label: const Text('Preguntar a IA'),
+                        ),
+                      ],
                       for (final citation in message.citations) ...[
                         const SizedBox(height: 12),
                         Container(

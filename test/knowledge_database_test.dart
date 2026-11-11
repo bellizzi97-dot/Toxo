@@ -71,6 +71,32 @@ void main() {
     expect(database.memoryEnabled, isFalse);
     expect(database.style, 'breve');
   });
+
+  test('keeps online AI disabled by default and persists the setting', () {
+    expect(database.aiEnabled, isFalse);
+
+    database.setAiEnabled(true);
+    expect(database.aiEnabled, isTrue);
+
+    database.setAiEnabled(false);
+    expect(database.aiEnabled, isFalse);
+  });
+
+  test('adds the online AI preference to an existing database', () {
+    final oldDb = sqlite3.open(':memory:');
+    oldDb.execute('''
+      CREATE TABLE preferences (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        memory_enabled INTEGER NOT NULL DEFAULT 0,
+        style TEXT NOT NULL DEFAULT 'cercano'
+      )
+    ''');
+    final oldDatabase = KnowledgeDatabase(oldDb)..initialize();
+
+    expect(oldDatabase.aiEnabled, isFalse);
+
+    oldDatabase.close();
+  });
 }
 
 KnowledgePackage _package() => const KnowledgePackage(

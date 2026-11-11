@@ -72,9 +72,19 @@ class KnowledgeDatabase {
       CREATE TABLE IF NOT EXISTS preferences (
         id INTEGER PRIMARY KEY CHECK (id = 1),
         memory_enabled INTEGER NOT NULL DEFAULT 0,
-        style TEXT NOT NULL DEFAULT 'cercano'
+        style TEXT NOT NULL DEFAULT 'cercano',
+        ai_enabled INTEGER NOT NULL DEFAULT 0
       )
     ''');
+    final preferenceColumns = _db
+        .select('PRAGMA table_info(preferences)')
+        .map((row) => row['name'] as String)
+        .toSet();
+    if (!preferenceColumns.contains('ai_enabled')) {
+      _db.execute(
+        'ALTER TABLE preferences ADD COLUMN ai_enabled INTEGER NOT NULL DEFAULT 0',
+      );
+    }
     _db.execute(
       "INSERT OR IGNORE INTO preferences(id, memory_enabled, style) "
       "VALUES (1, 0, 'cercano')",
@@ -99,6 +109,18 @@ class KnowledgeDatabase {
   String get style => _db.select(
         'SELECT style FROM preferences WHERE id = 1',
       ).first['style'] as String;
+
+  bool get aiEnabled =>
+      _db.select('SELECT ai_enabled FROM preferences WHERE id = 1')
+          .first['ai_enabled'] ==
+      1;
+
+  void setAiEnabled(bool enabled) {
+    _db.execute(
+      'UPDATE preferences SET ai_enabled = ? WHERE id = 1',
+      [enabled ? 1 : 0],
+    );
+  }
 
   void setMemoryEnabled(bool enabled) {
     _db.execute(

@@ -1,6 +1,6 @@
-# Toxo · asistente offline
+# Toxo · asistente offline con IA opcional
 
-Aplicación Flutter enfocada por ahora en Android. La interfaz, preferencias y biblioteca funcionan localmente; no se necesita una cuenta ni se envían consultas a un servidor.
+Aplicación Flutter enfocada por ahora en Android. La biblioteca local no requiere cuenta ni conexión; las funciones opcionales de IA y feedback se comunican con un backend cuando la persona decide usarlas.
 
 ## Estado actual
 
@@ -11,7 +11,8 @@ Aplicación Flutter enfocada por ahora en Android. La interfaz, preferencias y b
 - Estilo de conversación cercano o breve.
 - Interfaz móvil renovada con tonos menta/teal, acentos cálidos y sugerencias de preguntas para probar.
 - Saludos, agradecimientos y despedidas comunes reciben una respuesta local amigable y transparente en lugar del mensaje de “no lo encuentro”.
-- **Todavía no genera texto con un modelo de IA.** Devuelve pasajes encontrados y declara cuando la biblioteca no tiene respuesta. La integración nativa con `llama.cpp`/GGUF, la selección de un modelo con licencia compatible y las pruebas de rendimiento en dispositivos son trabajo pendiente.
+- La búsqueda y las citas de la biblioteca siguen siendo locales. La opción de IA en línea es voluntaria y solo envía una pregunta cuando se pulsa **Preguntar a IA**; no envía el historial, preferencias ni la biblioteca. Sin conexión, el chat local sigue funcionando.
+- El backend mínimo en `backend/` usa Gemini desde Cloud Run y guarda feedback explícito en Firestore. La clave de Gemini se configura como secreto en Google Cloud, nunca en Flutter, en la APK ni en GitHub. La integración nativa con `llama.cpp`/GGUF sigue pendiente.
 - No incluye artículos de Wikipedia ni Encarta. Importa únicamente paquetes cuyo contenido y licencia tengas derecho a usar; respeta atribución y demás condiciones de la fuente.
 
 ## Alcance de plataformas
@@ -55,10 +56,36 @@ flutter test
 flutter run -d <id-del-dispositivo-android>
 ```
 
+Para configurar la URL pública del backend en una compilación:
+
+```text
+flutter build apk --debug --dart-define=TOXO_API_BASE_URL=https://TU-SERVICIO.run.app
+```
+
+### Backend de prueba en Google Cloud
+
+Requiere un proyecto de Google Cloud con facturación habilitada. Restringe la clave de AI Studio a la API de Gemini y configura cuotas; en Google Cloud Console, crea un secreto de Secret Manager llamado `gemini-api-key` con esa clave y una base de datos Firestore en modo nativo. No guardes la clave en el repositorio ni en archivos de configuración de Flutter.
+
+Desde PowerShell, habilita los servicios necesarios y da permisos a la cuenta de ejecución de Cloud Run:
+
+```text
+gcloud services enable run.googleapis.com secretmanager.googleapis.com firestore.googleapis.com
+gcloud secrets add-iam-policy-binding gemini-api-key --member="serviceAccount:CUENTA_DE_SERVICIO" --role="roles/secretmanager.secretAccessor"
+gcloud projects add-iam-policy-binding ID_DEL_PROYECTO --member="serviceAccount:CUENTA_DE_SERVICIO" --role="roles/datastore.user"
+```
+
+Despliega desde la raíz del repositorio:
+
+```text
+gcloud run deploy toxo-api --source backend --region us-central1 --allow-unauthenticated --max 2 --set-secrets=GOOGLE_API_KEY=gemini-api-key:latest
+```
+
+El endpoint es público para que la app móvil pueda llamarlo. Limitar instancias no sustituye la protección contra abuso: antes de distribuir ampliamente, añade verificación de Firebase App Check/Play Integrity y límites de solicitudes/cuotas. Revisa también los costos de Gemini, Cloud Run y Firestore. El feedback se guarda en la colección `feedback`; no incluye identificadores del usuario.
+
 La compilación Android y las pruebas se verifican en GitHub Actions. Antes de distribuir, validar la instalación y operación en modo avión en dispositivos físicos. El modelo GGUF deberá ser un componente opcional independiente, con licencia y requisitos de memoria publicados, una vez se integre el runtime.
 
 ## APK de prueba en GitHub Actions
 
-El workflow **Android test APK** genera un APK de depuración y ejecuta las pruebas cuando se envía la rama `bellizzi97-dot-ia-offline-multiplataforma`, al abrir un pull request hacia `main`, o al iniciarlo manualmente desde la pestaña **Actions**. No requiere instalar Flutter en tu PC, pero sí que estos cambios estén en GitHub y que Actions esté habilitado.
+El workflow **Android test APK** genera un APK de depuración y ejecuta las pruebas al enviar `main` o `bellizzi97-dot-gemini-chat-feedback`, al abrir un pull request hacia `main`, o al iniciarlo manualmente desde **Actions**. También ejecuta las pruebas del backend. No requiere instalar Flutter en tu PC, pero sí que estos cambios estén en GitHub y que Actions esté habilitado.
 
-Cuando termine correctamente, descarga el artefacto `toxo-android-debug-apk` en los detalles de la ejecución y extrae `app-debug.apk`. Transfiérelo al teléfono, permite instalar esa app de prueba cuando Android lo solicite y ábrela. Es una APK de depuración, no una publicación de Play Store. Arranca con tres textos de demostración y funciona sin red para esas búsquedas; todavía no conversa con un modelo generativo local. Puedes enviarme capturas de la interfaz y contar qué te gustó o qué falló para ajustar la siguiente versión.
+Cuando termine correctamente, descarga el artefacto `toxo-android-debug-apk` en los detalles de la ejecución y extrae `app-debug.apk`. Transfiérelo al teléfono, permite instalar esa app de prueba cuando Android lo solicite y ábrela. Es una APK de depuración, no una publicación de Play Store. Arranca con tres textos de demostración y mantiene la búsqueda local disponible sin red. Para activar IA, compílala con la URL del backend ya desplegado.
